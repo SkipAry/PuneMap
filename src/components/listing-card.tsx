@@ -84,7 +84,12 @@ export function ListingCard({ listing, active = false, onHover, onSelect }: Prop
       </div>
 
       <h3 className="mt-1 text-lg">
-        <Link href={`/shed/${listing.slug}`} className="hover:text-action">
+        {/* inline-block plus padding so the thumb target clears 24px; the bare
+            text line is only 22px tall. */}
+        <Link
+          href={`/shed/${listing.slug}`}
+          className="inline-block py-0.5 hover:text-action"
+        >
           {listingTitle(listing)}
         </Link>
       </h3>

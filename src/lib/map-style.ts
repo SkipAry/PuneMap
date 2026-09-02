@@ -33,8 +33,10 @@ function cartoStyle(id: BasemapId, key: string) {
 
   return {
     version: 8 as const,
-    // A raster basemap serves no glyphs, but the cluster counts are text.
-    glyphs: "https://tiles.versatiles.org/assets/glyphs/{fontstack}/{range}.pbf",
+    // A raster basemap serves no glyphs, but the cluster counts are text. Use
+    // the same font endpoint as the vector styles so one fontstack name works
+    // for both basemaps.
+    glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     sources: {
       carto: {
         type: "raster" as const,

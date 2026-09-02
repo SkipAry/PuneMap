@@ -96,7 +96,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoverSlug, setHoverSlug] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [listOpen, setListOpen] = useState(true);
+  const [listOpen, setListOpen] = useState(false);
 
   const selectFromMap = useCallback((slug: string) => {
     setActiveSlug(slug);
@@ -199,9 +199,14 @@ export function SearchShell({ all }: { all: Listing[] }) {
       <section
         id="results"
         aria-label="Matching listings"
-        className={`panel absolute z-20 flex flex-col overflow-hidden transition-transform ${
-          listOpen ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
-        } inset-x-2 bottom-2 top-[46%] sm:inset-x-3 lg:inset-x-auto lg:right-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:bottom-3 lg:w-[390px] lg:translate-y-0`}
+        /*
+          Collapsed, the sheet is a bottom-anchored handle so the map stays full
+          screen; open, it rises to 46%. Height rather than a transform, because
+          a translate large enough to hide it also drags its shadow off-screen.
+        */
+        className={`panel absolute inset-x-2 bottom-2 z-20 flex flex-col overflow-hidden sm:inset-x-3 ${
+          listOpen ? "top-[46%]" : "top-auto max-h-14"
+        } lg:inset-x-auto lg:right-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:bottom-3 lg:max-h-none lg:w-[390px]`}
       >
         {/* The card headings are h3, so the list needs its own h2 to keep the
             document outline unbroken. Visually redundant with the count. */}

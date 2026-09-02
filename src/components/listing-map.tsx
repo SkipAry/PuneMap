@@ -123,7 +123,7 @@ export default function ListingMap({
       cluster: listingsRef.current.filter((l) => l.lat !== null).length > 40,
       // Tight enough that Bhosari, Nigdi, Hinjawadi and Pirangut separate at the
       // default Pune view instead of merging into one colourless group.
-      clusterRadius: 28,
+      clusterRadius: 22,
       clusterMaxZoom: 12,
       // One tally per zone, so a cluster knows whether it is all one cluster.
       clusterProperties: CLUSTER_TALLIES,
@@ -149,7 +149,8 @@ export default function ListingMap({
       filter: ["has", "point_count"],
       layout: {
         "text-field": ["get", "point_count_abbreviated"],
-        "text-font": ["noto_sans_regular"],
+        // The name OpenFreeMap actually serves; the lowercase form 404s.
+        "text-font": ["Noto Sans Regular"],
         "text-size": 12,
       },
       paint: { "text-color": ["case", IS_MIXED, "#101828", "#ffffff"] },
@@ -248,7 +249,6 @@ export default function ListingMap({
     });
 
     instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-    instance.scrollZoom.disable();
 
     instance.on("load", () => {
       addLayers(instance);
