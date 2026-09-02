@@ -121,7 +121,9 @@ export default function ListingMap({
       type: "geojson",
       data: toGeoJson(listingsRef.current),
       cluster: listingsRef.current.filter((l) => l.lat !== null).length > 40,
-      clusterRadius: 46,
+      // Tight enough that Bhosari, Nigdi, Hinjawadi and Pirangut separate at the
+      // default Pune view instead of merging into one colourless group.
+      clusterRadius: 28,
       clusterMaxZoom: 12,
       // One tally per zone, so a cluster knows whether it is all one cluster.
       clusterProperties: CLUSTER_TALLIES,
