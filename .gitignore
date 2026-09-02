@@ -9,3 +9,6 @@ next-env.d.ts
 .vercel
 .env*
 !.env.example
+
+# Impeccable live-overlay runtime artifact
+.impeccable/live/
