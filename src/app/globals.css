@@ -31,6 +31,13 @@
   --radius-panel: 16px;
   --radius-control: 10px;
   --topbar-h: 60px;
+
+  /*
+    Where the result panel can sit beside the map instead of over it. Set at
+    iPad portrait (820px) so a tablet gets the side layout; below this the
+    panel is a bottom sheet.
+  */
+  --breakpoint-panel: 820px;
 }
 
 :root {
@@ -300,6 +307,61 @@
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-ink);
+  }
+}
+
+/*
+  Where the result list lives. Written as plain media queries rather than
+  stacked utility variants, because the sheet uses logical insets and the docked
+  panel needs a physical left, and the two do not reliably override each other.
+
+  Below 820px it is a bottom sheet: a handle when closed, 46% tall when open.
+  From 820px (iPad portrait) it docks beside the map and the open state is moot.
+*/
+.results-dock {
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 20;
+}
+
+.results-dock[data-open="false"] {
+  top: auto;
+  max-height: 3.5rem;
+}
+
+.results-dock[data-open="true"] {
+  top: 46%;
+}
+
+@media (min-width: 640px) {
+  .results-dock {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+}
+
+@media (min-width: 820px) {
+  .results-dock,
+  .results-dock[data-open="false"],
+  .results-dock[data-open="true"] {
+    left: auto;
+    right: 0.75rem;
+    top: calc(var(--topbar-h) + 1.25rem);
+    width: 340px;
+    max-height: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Same selector list as the 820px block, so specificity matches and this
+     wider value actually wins. */
+  .results-dock,
+  .results-dock[data-open="false"],
+  .results-dock[data-open="true"] {
+    width: 390px;
   }
 }
 

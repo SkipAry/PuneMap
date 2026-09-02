@@ -149,7 +149,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
       </div>
 
       {/* Zone chips: the legend and the cluster filter, one control. */}
-      <div className="absolute inset-x-0 bottom-3 z-20 hidden px-2 sm:px-3 lg:block">
+      <div className="absolute inset-x-0 bottom-3 z-20 hidden px-2 sm:px-3 panel:block">
         <div className="panel mx-auto flex w-fit max-w-full items-center gap-1.5 overflow-x-auto p-1.5 scrollbar-slim">
           {CLUSTERS.map((c) => (
             <button
@@ -199,14 +199,9 @@ export function SearchShell({ all }: { all: Listing[] }) {
       <section
         id="results"
         aria-label="Matching listings"
-        /*
-          Collapsed, the sheet is a bottom-anchored handle so the map stays full
-          screen; open, it rises to 46%. Height rather than a transform, because
-          a translate large enough to hide it also drags its shadow off-screen.
-        */
-        className={`panel absolute inset-x-2 bottom-2 z-20 flex flex-col overflow-hidden sm:inset-x-3 ${
-          listOpen ? "top-[46%]" : "top-auto max-h-14"
-        } lg:inset-x-auto lg:right-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:bottom-3 lg:max-h-none lg:w-[390px]`}
+        // Position lives in .results-dock; data-open drives the sheet states.
+        data-open={listOpen ? "true" : "false"}
+        className="panel results-dock flex flex-col overflow-hidden"
       >
         {/* The card headings are h3, so the list needs its own h2 to keep the
             document outline unbroken. Visually redundant with the count. */}
@@ -226,7 +221,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
           </p>
           <button
             type="button"
-            className="btn-quiet ms-auto !min-h-8 !px-2.5 lg:hidden"
+            className="btn-quiet ms-auto !min-h-8 !px-2.5 panel:hidden"
             aria-expanded={listOpen}
             onClick={() => setListOpen((v) => !v)}
           >
