@@ -69,7 +69,7 @@ export function ListingCard({ listing, active = false, onHover, onSelect }: Prop
       data-slug={listing.slug}
       data-active={active || undefined}
       className="card result-card px-3 py-3"
-      // The leading edge and the locality dot both read the cluster zone hue.
+      // The locality dot is the card's zone carrier.
       style={{ ["--zone" as string]: zoneOf(listing.cluster) }}
       onMouseEnter={onHover ? () => onHover(listing.slug) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}

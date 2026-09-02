@@ -162,8 +162,8 @@
   }
 
   .chip-dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 999px;
     background: var(--zone, var(--color-muted));
     flex: none;
@@ -237,12 +237,16 @@
     box-shadow: var(--shadow-raised);
   }
 
+  /*
+    The zone hue reaches the card through the dot beside the locality, which is
+    the same mark the legend chips use. It deliberately does NOT get a coloured
+    side border: that would restate the dot and is the standard tell of a
+    generated interface.
+  */
   .card {
     background: #fff;
     border: 1px solid var(--color-line);
     border-radius: 14px;
-    /* The leading edge carries the cluster zone hue. */
-    border-left: 3px solid var(--zone, var(--color-line-strong));
     transition: box-shadow 140ms ease;
   }
 
