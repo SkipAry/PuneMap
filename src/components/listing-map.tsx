@@ -36,6 +36,40 @@ const ZONE_COLOUR: maplibregl.ExpressionSpecification = [
   ZONE.Other,
 ];
 
+/**
+ * A grouped pin carries a zone colour only when every listing inside it belongs
+ * to that zone. Pune clusters are geographically distinct, so that is the usual
+ * case; a genuinely mixed group stays white rather than averaging two hues into
+ * a colour that means nothing.
+ */
+const CLUSTER_TALLIES = Object.fromEntries(
+  Object.keys(ZONE).map((name) => [
+    `z_${name}`,
+    ["+", ["case", ["==", ["get", "cluster"], name], 1, 0]],
+  ]),
+);
+
+const HOMOGENEOUS: unknown[] = Object.entries(ZONE).flatMap(([name, hex]) => [
+  ["==", ["get", `z_${name}`], ["get", "point_count"]],
+  hex,
+]);
+
+const CLUSTER_ZONE_COLOUR = [
+  "case",
+  ...HOMOGENEOUS,
+  "#ffffff",
+] as unknown as maplibregl.ExpressionSpecification;
+
+/** True when no single zone accounts for the whole group. */
+const IS_MIXED = [
+  "all",
+  ...Object.keys(ZONE).map((name) => [
+    "!=",
+    ["get", `z_${name}`],
+    ["get", "point_count"],
+  ]),
+] as unknown as maplibregl.ExpressionSpecification;
+
 function toGeoJson(listings: Listing[]): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
@@ -89,6 +123,8 @@ export default function ListingMap({
       cluster: listingsRef.current.filter((l) => l.lat !== null).length > 40,
       clusterRadius: 46,
       clusterMaxZoom: 12,
+      // One tally per zone, so a cluster knows whether it is all one cluster.
+      clusterProperties: CLUSTER_TALLIES,
     });
 
     instance.addLayer({
@@ -97,10 +133,10 @@ export default function ListingMap({
       source: "listings",
       filter: ["has", "point_count"],
       paint: {
-        "circle-color": "#ffffff",
+        "circle-color": CLUSTER_ZONE_COLOUR,
         "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 25, 24],
         "circle-stroke-width": 2,
-        "circle-stroke-color": "#101828",
+        "circle-stroke-color": ["case", IS_MIXED, "#101828", "#ffffff"],
       },
     });
 
@@ -114,7 +150,7 @@ export default function ListingMap({
         "text-font": ["noto_sans_regular"],
         "text-size": 12,
       },
-      paint: { "text-color": "#101828" },
+      paint: { "text-color": ["case", IS_MIXED, "#101828", "#ffffff"] },
     });
 
     // Soft halo, so a pin stays findable over busy basemap colour.
