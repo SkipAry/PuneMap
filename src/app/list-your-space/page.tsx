@@ -16,7 +16,7 @@ export default function ListYourSpacePage() {
   return (
     <>
       <SiteHeader subtitle="List your space" />
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl">List your space, free</h1>
         <p className="mt-3 max-w-[62ch] text-base text-muted">
           There is no listing fee and no account to create. We are paid brokerage by the

@@ -25,6 +25,7 @@ import {
   verifiedAgo,
 } from "@/lib/derive";
 import { similarListings } from "@/lib/query";
+import { zoneOf } from "@/lib/clusters";
 import { clusterSlug, type Listing } from "@/lib/types";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -134,7 +135,7 @@ export default async function ShedPage({ params }: Params) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-6">
         <p className="label mb-3">
           <Link href="/" className="hover:text-ink">
             Search
@@ -149,7 +150,14 @@ export default async function ShedPage({ params }: Params) {
         <section className="grid gap-4 md:grid-cols-[1fr_320px]">
           <div>
             <div className="flex items-baseline justify-between gap-3">
-              <p className="label">{listing.locality ?? listing.cluster}</p>
+              <p className="label flex items-center gap-2">
+                <span
+                  className="chip-dot"
+                  aria-hidden="true"
+                  style={{ ["--zone" as string]: zoneOf(listing.cluster) }}
+                />
+                {listing.locality ?? listing.cluster}
+              </p>
               <AvailabilityTag value={listing.availability} />
             </div>
             <h1 className="mt-1 text-3xl">{listingTitle(listing)}</h1>
@@ -165,11 +173,11 @@ export default async function ShedPage({ params }: Params) {
         {/* 2. Full spec table */}
         <section className="mt-8">
           <h2 className="group-heading">Specification</h2>
-          <dl className="grid gap-x-8 sm:grid-cols-2">
+          <dl className="card grid gap-x-8 px-4 py-2 sm:grid-cols-2">
             {stated.map((r) => (
               <div
                 key={r.label}
-                className="flex items-baseline justify-between gap-4 border-b border-line py-1.5"
+                className="flex items-baseline justify-between gap-4 border-b border-line py-2 last:border-0"
               >
                 <dt className="label">{r.label}</dt>
                 <dd className="num text-base">{r.value}</dd>
@@ -178,7 +186,7 @@ export default async function ShedPage({ params }: Params) {
           </dl>
 
           {unstated.length > 0 ? (
-            <div className="mt-6 border-t border-ink/25 pt-4">
+            <div className="mt-4 rounded-[14px] bg-[rgba(27,110,243,0.06)] px-4 py-3">
               <h3 className="text-sm font-bold">Not stated by the broker</h3>
               <p className="mt-1 max-w-[70ch] text-sm text-muted">
                 These were not in the original listing. We have not guessed them.
@@ -193,7 +201,7 @@ export default async function ShedPage({ params }: Params) {
               {listing.broker_phone ? (
                 <a
                   href={`tel:${listing.broker_phone}`}
-                  className="mt-3 inline-block text-sm text-action underline"
+                  className="btn-action mt-3"
                 >
                   Call to confirm
                 </a>
@@ -205,8 +213,8 @@ export default async function ShedPage({ params }: Params) {
         {/* 3. Commercials - what came from the broker vs what came from arithmetic */}
         <section className="mt-8">
           <h2 className="group-heading">Commercials</h2>
-          <dl className="grid gap-x-8 sm:grid-cols-2">
-            <div className="flex items-baseline justify-between gap-4 border-b border-line py-1.5">
+          <dl className="card grid gap-x-8 px-4 py-2 sm:grid-cols-2">
+            <div className="flex items-baseline justify-between gap-4 border-b border-line py-2">
               <dt className="label">
                 Rate per sq ft
                 {rate !== null && rateIsDerived(listing) && rent !== null ? (

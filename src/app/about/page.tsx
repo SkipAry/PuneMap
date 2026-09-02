@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SiteHeader } from "@/components/site-header";
+import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterSlug } from "@/lib/types";
 
 export const metadata = {
@@ -14,7 +15,7 @@ export default function AboutPage() {
   return (
     <>
       <SiteHeader subtitle="About" />
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl">About this site</h1>
 
         <div className="mt-4 flex max-w-[70ch] flex-col gap-4 text-base">
@@ -34,7 +35,13 @@ export default function AboutPage() {
           <h2 className="group-heading mt-4">Clusters covered</h2>
           <div className="flex flex-wrap gap-1.5">
             {CLUSTERS.map((c) => (
-              <Link key={c} href={`/${clusterSlug(c)}`} className="chip">
+              <Link
+                key={c}
+                href={`/${clusterSlug(c)}`}
+                className="chip"
+                style={{ ["--zone" as string]: zoneOf(c) }}
+              >
+                <span className="chip-dot" aria-hidden="true" />
                 {c}
               </Link>
             ))}
@@ -45,6 +52,11 @@ export default function AboutPage() {
             Listing is free. Send the plot number, built-up area, clear height, crane capacity,
             sanctioned power, flooring, docks and the rent you expect. Incomplete details are fine —
             the site is built to show what is known and mark the rest as unstated.
+          </p>
+          <p>
+            <Link href="/list-your-space" className="btn-action">
+              Add your space, free
+            </Link>
           </p>
           <p>
             We are paid brokerage on a closed lease by the owner. There is no listing fee, no

@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListings } from "@/lib/data";
 import { fmtArea, fmtNumber } from "@/lib/derive";
+import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterFromSlug, clusterSlug, type Listing } from "@/lib/types";
 
 type Params = { params: Promise<{ cluster: string }> };
@@ -86,8 +87,16 @@ export default async function ClusterPage({ params }: Params) {
     <>
       <SiteHeader subtitle={`${cluster} · ${rows.length} available`} />
 
-      <main className="mx-auto max-w-5xl px-4 py-6">
-        <h1 className="text-3xl">Industrial sheds and warehouses on rent in {cluster}</h1>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-6">
+        <p className="label flex items-center gap-2">
+          <span
+            className="chip-dot"
+            aria-hidden="true"
+            style={{ ["--zone" as string]: zoneOf(cluster) }}
+          />
+          {cluster}
+        </p>
+        <h1 className="mt-1 text-3xl">Industrial sheds and warehouses on rent in {cluster}</h1>
         <p className="mt-2 max-w-[70ch] text-base text-muted">
           {rows.length} {rows.length === 1 ? "property" : "properties"} currently available around{" "}
           {cluster}. The ranges below count only what brokers actually stated — nothing here is
@@ -95,12 +104,11 @@ export default async function ClusterPage({ params }: Params) {
         </p>
 
         <div className="mt-5 grid gap-4 md:grid-cols-[1fr_320px]">
-          <dl className="spec-strip !grid-cols-2 sm:!grid-cols-4">
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {facts.map((f) => (
-              <div key={f.label} className="spec-cell">
-                <dd className="num spec-value">{f.value}</dd>
-                <div className="spec-rule" aria-hidden="true" />
-                <dt className="label">
+              <div key={f.label} className="card px-3 py-2.5">
+                <dd className="num text-lg">{f.value}</dd>
+                <dt className="label mt-1">
                   {f.label}
                   <span className="block">{f.note}</span>
                 </dt>
@@ -111,7 +119,7 @@ export default async function ClusterPage({ params }: Params) {
         </div>
 
         <p className="mt-5">
-          <Link href={`/?cluster=${slug}`} className="chip inline-block px-3 py-2 text-action">
+          <Link href={`/?cluster=${slug}`} className="btn-action">
             Filter these {rows.length} listings by height, crane and power →
           </Link>
         </p>
@@ -129,7 +137,13 @@ export default async function ClusterPage({ params }: Params) {
           <h2 className="group-heading">Other clusters</h2>
           <div className="flex flex-wrap gap-1.5">
             {CLUSTERS.filter((c) => c !== cluster).map((c) => (
-              <Link key={c} href={`/${clusterSlug(c)}`} className="chip">
+              <Link
+                key={c}
+                href={`/${clusterSlug(c)}`}
+                className="chip"
+                style={{ ["--zone" as string]: zoneOf(c) }}
+              >
+                <span className="chip-dot" aria-hidden="true" />
                 {c}
               </Link>
             ))}

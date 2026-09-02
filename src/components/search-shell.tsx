@@ -203,6 +203,9 @@ export function SearchShell({ all }: { all: Listing[] }) {
           listOpen ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
         } inset-x-2 bottom-2 top-[46%] sm:inset-x-3 lg:inset-x-auto lg:right-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:bottom-3 lg:w-[390px] lg:translate-y-0`}
       >
+        {/* The card headings are h3, so the list needs its own h2 to keep the
+            document outline unbroken. Visually redundant with the count. */}
+        <h2 className="sr-only">Matching listings</h2>
         <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
           <button
             type="button"

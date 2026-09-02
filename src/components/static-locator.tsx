@@ -1,8 +1,9 @@
-import { AVAILABILITY_COLOUR, type Listing } from "@/lib/types";
+import { zoneOf } from "@/lib/clusters";
+import type { Listing } from "@/lib/types";
 
 /**
- * A surveyor's plot plan, not an interactive map: every listing as a tick, this
- * one as a cross-hair. Inline SVG, so the detail page needs no tile service, no
+ * A locator diagram, not an interactive map: nearby listings as zone-coloured
+ * ticks, this one called out. Inline SVG, so the page needs no tile service, no
  * key and no client JavaScript.
  */
 export function StaticLocator({
@@ -58,7 +59,7 @@ export function StaticLocator({
         aria-label={`Plot plan locating this ${listing.property_type.toLowerCase()} in ${listing.cluster} relative to other listings around Pune`}
       >
         {/* Grid: the drawing's setting-out lines. */}
-        <g stroke="var(--color-rule)" strokeWidth="1">
+        <g stroke="var(--color-line)" strokeWidth="1">
           {[0.25, 0.5, 0.75].map((f) => (
             <line key={`v${f}`} x1={W * f} y1={0} x2={W * f} y2={H} />
           ))}
@@ -75,25 +76,28 @@ export function StaticLocator({
               cx={x(p.lng as number)}
               cy={y(p.lat as number)}
               r="3"
-              fill={AVAILABILITY_COLOUR[p.availability] ?? "var(--color-steel)"}
+              fill={zoneOf(p.cluster)}
               opacity="0.45"
             />
           ))}
 
         {/* This listing: full-width cross-hair, the way a plot is called out. */}
-        <g stroke="var(--color-signal)" strokeWidth="1">
+        <g stroke="var(--color-action)" strokeWidth="1.5">
           <line x1={0} y1={cy} x2={W} y2={cy} />
           <line x1={cx} y1={0} x2={cx} y2={H} />
         </g>
-        <circle cx={cx} cy={cy} r="6" fill="none" stroke="var(--color-signal)" strokeWidth="2" />
+        <circle cx={cx} cy={cy} r="7" fill={zoneOf(listing.cluster)} stroke="#fff" strokeWidth="3" />
 
-        {/* Keep the callout inside the frame when the plot sits near an edge. */}
+        {/*
+          preserveAspectRatio="slice" crops the viewBox to cover the figure, so
+          the callout is clamped well inside the frame rather than positioned
+          purely relative to the plot.
+        */}
         <text
-          x={cx > W - 170 ? cx - 12 : cx + 12}
-          y={cy < 28 ? cy + 22 : cy - 10}
-          textAnchor={cx > W - 170 ? "end" : "start"}
+          x={Math.min(Math.max(cx + 12, 14), W - 190)}
+          y={Math.min(Math.max(cy < 70 ? cy + 32 : cy - 14, 52), H - 28)}
           fill="var(--color-ink)"
-          fontSize="13"
+          fontSize="14"
           fontWeight="600"
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
