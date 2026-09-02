@@ -135,7 +135,7 @@ export default async function ShedPage({ params }: Params) {
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6">
-        <p className="spec-label mb-3">
+        <p className="label mb-3">
           <Link href="/" className="hover:text-ink">
             Search
           </Link>
@@ -149,11 +149,11 @@ export default async function ShedPage({ params }: Params) {
         <section className="grid gap-4 md:grid-cols-[1fr_320px]">
           <div>
             <div className="flex items-baseline justify-between gap-3">
-              <p className="spec-label">{listing.locality ?? listing.cluster}</p>
+              <p className="label">{listing.locality ?? listing.cluster}</p>
               <AvailabilityTag value={listing.availability} />
             </div>
             <h1 className="mt-1 text-3xl">{listingTitle(listing)}</h1>
-            <p className="mt-2 max-w-[70ch] text-base text-steel">
+            <p className="mt-2 max-w-[70ch] text-base text-muted">
               {listing.property_type} in {listing.cluster}. Verified{" "}
               {verifiedAgo(listing.last_verified)}.
               {listing.notes ? ` ${listing.notes}.` : ""}
@@ -169,9 +169,9 @@ export default async function ShedPage({ params }: Params) {
             {stated.map((r) => (
               <div
                 key={r.label}
-                className="flex items-baseline justify-between gap-4 border-b border-rule py-1.5"
+                className="flex items-baseline justify-between gap-4 border-b border-line py-1.5"
               >
-                <dt className="spec-label">{r.label}</dt>
+                <dt className="label">{r.label}</dt>
                 <dd className="num text-base">{r.value}</dd>
               </div>
             ))}
@@ -180,12 +180,12 @@ export default async function ShedPage({ params }: Params) {
           {unstated.length > 0 ? (
             <div className="mt-6 border-t border-ink/25 pt-4">
               <h3 className="text-sm font-bold">Not stated by the broker</h3>
-              <p className="mt-1 max-w-[70ch] text-sm text-steel">
+              <p className="mt-1 max-w-[70ch] text-sm text-muted">
                 These were not in the original listing. We have not guessed them.
               </p>
               <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 {unstated.map((r) => (
-                  <li key={r.label} className="spec-label">
+                  <li key={r.label} className="label">
                     {r.label}
                   </li>
                 ))}
@@ -193,7 +193,7 @@ export default async function ShedPage({ params }: Params) {
               {listing.broker_phone ? (
                 <a
                   href={`tel:${listing.broker_phone}`}
-                  className="mt-3 inline-block text-sm text-signal underline"
+                  className="mt-3 inline-block text-sm text-action underline"
                 >
                   Call to confirm
                 </a>
@@ -206,8 +206,8 @@ export default async function ShedPage({ params }: Params) {
         <section className="mt-8">
           <h2 className="group-heading">Commercials</h2>
           <dl className="grid gap-x-8 sm:grid-cols-2">
-            <div className="flex items-baseline justify-between gap-4 border-b border-rule py-1.5">
-              <dt className="spec-label">
+            <div className="flex items-baseline justify-between gap-4 border-b border-line py-1.5">
+              <dt className="label">
                 Rate per sq ft
                 {rate !== null && rateIsDerived(listing) && rent !== null ? (
                   <span className="block">calculated from {fmtRupees(rent)} per month</span>
@@ -215,8 +215,8 @@ export default async function ShedPage({ params }: Params) {
               </dt>
               <dd className="num text-base">{rate === null ? DASH : `${fmtRupees(rate)}`}</dd>
             </div>
-            <div className="flex items-baseline justify-between gap-4 border-b border-rule py-1.5">
-              <dt className="spec-label">
+            <div className="flex items-baseline justify-between gap-4 border-b border-line py-1.5">
+              <dt className="label">
                 Monthly rent
                 {rent !== null && rentIsDerived(listing) && listing.rate_per_sqft !== null ? (
                   <span className="block">
@@ -226,8 +226,8 @@ export default async function ShedPage({ params }: Params) {
               </dt>
               <dd className="num text-base">{fmtRupees(rent)}</dd>
             </div>
-            <div className="flex items-baseline justify-between gap-4 border-b border-rule py-1.5">
-              <dt className="spec-label">Deposit</dt>
+            <div className="flex items-baseline justify-between gap-4 border-b border-line py-1.5">
+              <dt className="label">Deposit</dt>
               <dd className="num text-base">
                 {listing.deposit_months === null
                   ? DASH
@@ -243,11 +243,11 @@ export default async function ShedPage({ params }: Params) {
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
             <p className="text-base">{fmtText(listing.broker_name)}</p>
             {listing.broker_phone ? (
-              <a href={`tel:${listing.broker_phone}`} className="num text-base text-signal underline">
+              <a href={`tel:${listing.broker_phone}`} className="num text-base text-action underline">
                 {listing.broker_phone}
               </a>
             ) : (
-              <span className="text-base text-steel">{DASH}</span>
+              <span className="text-base text-muted">{DASH}</span>
             )}
             {listing.source_url ? (
               <a
@@ -260,7 +260,7 @@ export default async function ShedPage({ params }: Params) {
               </a>
             ) : null}
           </div>
-          <p className="spec-label mt-2 max-w-[70ch]">
+          <p className="label mt-2 max-w-[70ch]">
             This entry restructures a publicly posted listing. The original is linked above and
             remains the broker&rsquo;s.
           </p>

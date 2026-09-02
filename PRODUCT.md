@@ -19,7 +19,9 @@ each. He is comparing across those calls from memory or a spreadsheet.
 **Secondary: the site owner**, who enters and verifies listings directly in the Supabase
 table editor. There is no other admin surface, by design.
 
-Brokers are a data source, not users. They do not log in and cannot submit listings.
+**Third: brokers and owners submitting a property.** They arrive once, fill a short
+form and leave. They never get an account, a login or a dashboard, and they cannot
+publish - every submission is reviewed by the owner before it appears.
 
 ## Product Purpose
 
@@ -80,10 +82,19 @@ approval, MIDC, built-to-suit.
 - Derived commercials are labelled as calculated, so the user knows what came from the
   broker and what came from arithmetic.
 
+**Free listing submission** (added 3 Sep 2026, reversing an earlier non-goal). Brokers and
+owners submit a property from the site; rows land in `listing_submissions` with status
+`New` and are **never published automatically**. The owner reviews each one and promotes
+accepted rows into `listings` by hand. Every spec on the form is optional, because the
+product treats an unstated spec as unstated rather than guessing it, and demanding a full
+form would only cost submissions. There is still no account, no login and no dashboard:
+the submitter never sees the table again.
+
 **Explicit non-goals.** Building any of these is a failure, not a bonus: user accounts or
-auth; payments, pricing or subscriptions; a broker dashboard or listing-submission portal;
-saved searches, favourites or comparison baskets; a chatbot or AI assistant; multi-city
-support or i18n; dark mode; a CMS; any analytics beyond a single Plausible/Umami tag.
+auth; payments, pricing or subscriptions; a broker *dashboard* (submission is a one-way
+form, not an account); saved searches, favourites or comparison baskets; a chatbot or AI
+assistant; multi-city support or i18n; dark mode; a CMS; any analytics beyond a single
+Plausible/Umami tag.
 
 **Technical constraints:**
 

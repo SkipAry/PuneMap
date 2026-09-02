@@ -4,18 +4,19 @@ import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { zoneOf } from "@/lib/clusters";
 import { fmtNumber } from "@/lib/derive";
 import { activeFilterCount, parseFilters, serialiseFilters, type Filters } from "@/lib/filters";
+import { BASEMAPS, type BasemapId } from "@/lib/map-style";
 import { PAGE_SIZE, applyFilters, describeMiss } from "@/lib/query";
-import type { Listing } from "@/lib/types";
+import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
 
 import { FilterRail } from "./filter-rail";
 import { ListingCard } from "./listing-card";
 
-/* MapLibre is heavy and useless without JS, so it never enters the server HTML. */
 const ListingMap = dynamic(() => import("./listing-map"), {
   ssr: false,
-  loading: () => <div className="size-full bg-paper" />,
+  loading: () => <div className="size-full bg-ground" />,
 });
 
 const prefersReducedMotion = () =>
@@ -27,15 +28,10 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // The URL is the state. Nothing about the filters is mirrored in useState.
+  // The URL is the state. No filter value is mirrored in useState.
   const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
   const result = useMemo(() => applyFilters(all, filters), [all, filters]);
 
-  /*
-    Discrete choices push, so Back walks the filter stack the way a user expects.
-    Continuous controls replace: a slider fires per step, and pushing each one
-    would bury the previous filter under thirty history entries.
-  */
   const write = useCallback(
     (next: Filters, history: "push" | "replace" = "push") => {
       const qs = serialiseFilters(next).toString();
@@ -54,10 +50,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
 
   const clearAll = useCallback(() => router.push(pathname, { scroll: false }), [router, pathname]);
 
-  /*
-    The one orchestrated moment: cards that no longer match fade out over 120ms,
-    then the list reflows. Presentation only - it never feeds back into filters.
-  */
+  /* Cards that stop matching fade, then the list reflows. The only motion. */
   const [displayed, setDisplayed] = useState<Listing[]>(result.listings);
   const [leaving, setLeaving] = useState<Set<string>>(() => new Set());
   const displayedRef = useRef(displayed);
@@ -88,11 +81,9 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const [limit, setLimit] = useState(PAGE_SIZE);
   useEffect(() => setLimit(PAGE_SIZE), [searchParams]);
 
-  // MapLibre parses ~200KB; loading it once the browser is idle keeps it out of
-  // Total Blocking Time. The result list is fully usable before it arrives.
+  // MapLibre parses ~200KB; loading it on idle keeps it out of blocking time.
   const [mapReady, setMapReady] = useState(false);
   useEffect(() => {
-    // Inside an effect we are always on the client.
     if (typeof window.requestIdleCallback === "function") {
       const id = window.requestIdleCallback(() => setMapReady(true), { timeout: 1500 });
       return () => window.cancelIdleCallback(id);
@@ -101,13 +92,15 @@ export function SearchShell({ all }: { all: Listing[] }) {
     return () => window.clearTimeout(id);
   }, []);
 
+  const [basemap, setBasemap] = useState<BasemapId>("light");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoverSlug, setHoverSlug] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(true);
 
-  /* A pin click scrolls its card into view and outlines it. */
   const selectFromMap = useCallback((slug: string) => {
     setActiveSlug(slug);
+    setListOpen(true);
     const node = document.getElementById(`card-${slug}`);
     node?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
   }, []);
@@ -115,143 +108,213 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const visible = displayed.slice(0, limit);
   const activeCount = activeFilterCount(filters);
 
-  const rail = (
-    <FilterRail
-      filters={filters}
-      patch={patch}
-      clearAll={clearAll}
-      shown={result.total}
-      total={all.length}
-    />
-  );
+  const toggleCluster = (c: string) =>
+    patch({
+      clusters: filters.clusters.includes(c)
+        ? filters.clusters.filter((x) => x !== c)
+        : [...filters.clusters, c],
+    });
 
   return (
-    <div className="lg:flex lg:h-[calc(100dvh-2.4rem)] lg:overflow-hidden">
-      {/* Filters - 300px rail on desktop, full-height sheet on mobile. */}
-      <aside className="hidden w-[300px] shrink-0 border-r border-rule lg:order-1 lg:block">{rail}</aside>
-
-      {sheetOpen ? (
-        <div className="fixed inset-0 z-40 bg-paper lg:hidden">
-          <div className="flex items-center justify-between border-b border-rule px-4 py-2">
-            <h2 className="text-lg">Filters</h2>
-            <button type="button" className="chip" onClick={() => setSheetOpen(false)}>
-              Show {fmtNumber(result.total)} sheds
-            </button>
-          </div>
-          <div className="h-[calc(100dvh-3rem)]">{rail}</div>
-        </div>
-      ) : null}
-
-      {/* Map - fixed to the top on mobile, sticky column on desktop. */}
-      <div className="sticky top-0 z-20 h-[38vh] w-full border-b border-rule lg:static lg:order-3 lg:h-auto lg:flex-1 lg:border-b-0 lg:border-l">
+    /* The territory is the page: the map fills it and every panel floats on it. */
+    <div className="fixed inset-0 overflow-hidden">
+      <div className="absolute inset-0">
         {mapReady ? (
           <ListingMap
             listings={displayed}
             activeSlug={activeSlug}
             hoverSlug={hoverSlug}
+            basemap={basemap}
             onSelect={selectFromMap}
           />
         ) : (
-          <div className="size-full bg-paper" />
+          <div className="size-full bg-ground" />
         )}
       </div>
 
-      {/* Results - always present, never behind a tab. This is the map's text equivalent. */}
-      <section
-        id="results"
-        className="w-full pb-16 lg:order-2 lg:w-[380px] lg:shrink-0 lg:overflow-y-auto lg:pb-0"
-        aria-label="Matching listings"
-      >
-        <div className="border-b border-rule px-4 py-2">
-          <p className="text-sm" aria-live="polite">
-            <span className="num">{fmtNumber(result.total)}</span>{" "}
-            {result.total === 1 ? "shed" : "sheds"} match
-            {activeCount === 0 ? "" : ` ${activeCount} ${activeCount === 1 ? "filter" : "filters"}`}
-          </p>
+      {/* Basemap switch, bottom-left, away from the result panel. */}
+      <div className="panel absolute bottom-3 left-2 z-20 hidden p-1 sm:left-3 sm:block">
+        <div className="segment">
+          {BASEMAPS.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              aria-pressed={basemap === b.id}
+              onClick={() => setBasemap(b.id)}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          {/* The cost of excluding unstated specs, made visible and reversible. */}
-          {!filters.loose && result.nullExclusions.length > 0 ? (
-            <div className="mt-1.5">
-              {result.nullExclusions.map((n) => (
-                <p key={n.key} className="spec-label">
-                  {fmtNumber(n.count)} more {n.count === 1 ? "listing does" : "listings do"} not
-                  state {n.label}.
-                </p>
-              ))}
-              <button
-                type="button"
-                className="mt-1 text-sm text-signal underline"
-                onClick={() => patch({ loose: true })}
-              >
-                Include them
+      {/* Zone chips: the legend and the cluster filter, one control. */}
+      <div className="absolute inset-x-0 bottom-3 z-20 hidden px-2 sm:px-3 lg:block">
+        <div className="panel mx-auto flex w-fit max-w-full items-center gap-1.5 overflow-x-auto p-1.5 scrollbar-slim">
+          {CLUSTERS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className="chip"
+              data-zone
+              aria-pressed={filters.clusters.includes(c)}
+              style={{ ["--zone" as string]: zoneOf(c) }}
+              onClick={() => toggleCluster(c)}
+            >
+              <span className="chip-dot" aria-hidden="true" />
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter sheet. Floating panel on desktop, full sheet on phones. */}
+      {filtersOpen ? (
+        <div
+          className="absolute inset-0 z-40 bg-[rgba(16,24,40,0.35)] lg:bg-transparent"
+          onClick={() => setFiltersOpen(false)}
+        >
+          <div
+            className="panel absolute inset-x-0 bottom-0 top-16 flex flex-col overflow-hidden sm:inset-x-3 lg:inset-auto lg:bottom-3 lg:left-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:w-[320px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+              <h2 className="text-lg">Filters</h2>
+              <button type="button" className="btn-quiet" onClick={() => setFiltersOpen(false)}>
+                Show {fmtNumber(result.total)}
               </button>
             </div>
-          ) : null}
+            <FilterRail
+              filters={filters}
+              patch={patch}
+              clearAll={clearAll}
+              shown={result.total}
+              total={all.length}
+            />
+          </div>
+        </div>
+      ) : null}
 
-          {filters.loose ? (
+      {/* Results: the map text-equivalent, always reachable. */}
+      <section
+        id="results"
+        aria-label="Matching listings"
+        className={`panel absolute z-20 flex flex-col overflow-hidden transition-transform ${
+          listOpen ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
+        } inset-x-2 bottom-2 top-[46%] sm:inset-x-3 lg:inset-x-auto lg:right-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:bottom-3 lg:w-[390px] lg:translate-y-0`}
+      >
+        <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={activeCount > 0}
+            onClick={() => setFiltersOpen(true)}
+          >
+            Filters{activeCount > 0 ? ` · ${activeCount}` : ""}
+          </button>
+          <p className="text-sm" aria-live="polite">
+            <span className="num">{fmtNumber(result.total)}</span>{" "}
+            <span className="text-muted">{result.total === 1 ? "match" : "matches"}</span>
+          </p>
+          <button
+            type="button"
+            className="btn-quiet ms-auto !min-h-8 !px-2.5 lg:hidden"
+            aria-expanded={listOpen}
+            onClick={() => setListOpen((v) => !v)}
+          >
+            {listOpen ? "Hide list" : "Show list"}
+          </button>
+        </div>
+
+        {/* What the null contract cost, and the one control that reverses it. */}
+        {!filters.loose && result.nullExclusions.length > 0 ? (
+          <div className="border-b border-line bg-[rgba(27,110,243,0.05)] px-3 py-2.5">
+            <p className="text-sm">
+              <span className="num">{fmtNumber(result.nullExcludedTotal)}</span> more{" "}
+              {result.nullExcludedTotal === 1 ? "listing does" : "listings do"} not state{" "}
+              {result.nullExclusions.map((n) => n.label).join(" or ")}. Unstated does not mean
+              absent — these are worth a call.
+            </p>
             <button
               type="button"
-              className="mt-1 text-sm text-signal underline"
+              className="btn-action mt-2 !min-h-8"
+              onClick={() => patch({ loose: true })}
+            >
+              Include them
+            </button>
+          </div>
+        ) : null}
+
+        {filters.loose ? (
+          <div className="border-b border-line px-3 py-2">
+            <button
+              type="button"
+              className="text-sm text-action underline"
               onClick={() => patch({ loose: false })}
             >
               Exclude listings that do not state these specs
             </button>
-          ) : null}
+          </div>
+        ) : null}
+
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
+          {result.total === 0 ? (
+            <div className="px-4 py-6">
+              <p className="text-base">
+                No shed matches all {activeCount} {activeCount === 1 ? "filter" : "filters"}.
+                {result.closestMiss
+                  ? ` The closest miss is ${describeMiss(result.closestMiss)}.`
+                  : ""}
+              </p>
+              <button type="button" className="btn-quiet mt-3" onClick={clearAll}>
+                Clear all filters
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 p-2.5">
+                {visible.map((listing) => (
+                  <div
+                    key={listing.slug}
+                    data-leaving={leaving.has(listing.slug)}
+                    className="result-card"
+                  >
+                    <ListingCard
+                      listing={listing}
+                      active={activeSlug === listing.slug}
+                      onHover={setHoverSlug}
+                      onSelect={setActiveSlug}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {displayed.length > limit ? (
+                <div className="px-2.5 pb-3">
+                  <button
+                    type="button"
+                    className="btn-quiet w-full"
+                    onClick={() => setLimit((n) => n + PAGE_SIZE)}
+                  >
+                    Show {Math.min(PAGE_SIZE, displayed.length - limit)} more
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
 
-        {result.total === 0 ? (
-          <div className="px-4 py-6">
-            <p className="text-base">
-              No shed matches all {activeCount} {activeCount === 1 ? "filter" : "filters"}.
-              {result.closestMiss ? ` The closest miss is ${describeMiss(result.closestMiss)}.` : ""}
-            </p>
-            {/* A reset is the user's own action, so it stays ink; signal in this
-                block belongs to Include them, the null reversal. */}
-            <button type="button" className="mt-3 text-sm underline" onClick={clearAll}>
-              Clear all filters
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="result-list flex flex-col gap-2 px-3 py-3">
-              {visible.map((listing) => (
-                <div key={listing.slug} data-leaving={leaving.has(listing.slug)} className="result-card">
-                  <ListingCard
-                    listing={listing}
-                    active={activeSlug === listing.slug}
-                    onHover={setHoverSlug}
-                    onSelect={setActiveSlug}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {displayed.length > limit ? (
-              <div className="px-3 pb-4">
-                <button
-                  type="button"
-                  className="chip w-full py-2"
-                  onClick={() => setLimit((n) => n + PAGE_SIZE)}
-                >
-                  Show {Math.min(PAGE_SIZE, displayed.length - limit)} more
-                </button>
-              </div>
-            ) : null}
-          </>
-        )}
+        <noscript>
+          <p className="border-t border-line px-3 py-2 text-sm text-muted">
+            Filters need JavaScript. Browse a cluster instead:{" "}
+            {CLUSTERS.map((c) => (
+              <a key={c} href={`/${clusterSlug(c)}`} className="underline">
+                {c}{" "}
+              </a>
+            ))}
+          </p>
+        </noscript>
       </section>
-
-      {/* Mobile: sticky bar carrying the filter count. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-paper px-4 py-2 lg:hidden">
-        <button
-          type="button"
-          className="chip w-full py-2"
-          onClick={() => setSheetOpen(true)}
-          aria-expanded={sheetOpen}
-        >
-          Filters{activeCount > 0 ? ` · ${activeCount} active` : ""}
-        </button>
-      </div>
     </div>
   );
 }

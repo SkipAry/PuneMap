@@ -1,57 +1,60 @@
-import type { StyleSpecification } from "maplibre-gl";
-
 /**
- * Basemap under the pins, drawn by MapLibre GL JS over OpenStreetMap data.
+ * Two basemaps, switchable from the map: Light and Voyager.
  *
- * Default is OpenFreeMap's Positron - the same near-monochrome design as CARTO
- * light_all, but genuinely keyless. CARTO's CDN still answers without a key,
- * yet stamps every tile with an "API KEY REQUIRED" watermark, so it is only
- * usable once a key exists.
- *
- * Resolution order:
- *   NEXT_PUBLIC_MAP_STYLE_URL  - a full style JSON, wins over everything
- *   NEXT_PUBLIC_CARTO_API_KEY  - CARTO raster basemaps, unwatermarked
- *   otherwise                  - OpenFreeMap Positron vector tiles
+ * Both come from OpenFreeMap, which is keyless and unmetered. CARTO ships the
+ * originals of these two looks but stamps every tile "API KEY REQUIRED" without
+ * a key, so setting NEXT_PUBLIC_CARTO_API_KEY swaps in the real ones.
  */
-const STYLE_URL = process.env.NEXT_PUBLIC_MAP_STYLE_URL;
+export type BasemapId = "light" | "voyager";
+
+export const BASEMAPS: { id: BasemapId; label: string }[] = [
+  { id: "light", label: "Light" },
+  { id: "voyager", label: "Voyager" },
+];
+
 const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY;
 
-/** CARTO raster style: light_all (Positron) or voyager. */
-const CARTO_STYLE = process.env.NEXT_PUBLIC_CARTO_STYLE ?? "light_all";
+/** OpenFreeMap Positron reads as CARTO Light; Liberty as CARTO Voyager. */
+const OPENFREEMAP: Record<BasemapId, string> = {
+  light: "https://tiles.openfreemap.org/styles/positron",
+  voyager: "https://tiles.openfreemap.org/styles/liberty",
+};
 
-const OPENFREEMAP_POSITRON = "https://tiles.openfreemap.org/styles/positron";
+const CARTO_STYLE: Record<BasemapId, string> = {
+  light: "light_all",
+  voyager: "rastertiles/voyager",
+};
 
-/** @2x tiles at tileSize 256 render at device resolution on retina screens. */
-function cartoStyle(key: string): StyleSpecification {
+function cartoStyle(id: BasemapId, key: string) {
   const tiles = ["a", "b", "c", "d"].map(
     (sub) =>
-      `https://${sub}.basemaps.cartocdn.com/${CARTO_STYLE}/{z}/{x}/{y}@2x.png?api_key=${encodeURIComponent(key)}`,
+      `https://${sub}.basemaps.cartocdn.com/${CARTO_STYLE[id]}/{z}/{x}/{y}@2x.png?api_key=${encodeURIComponent(key)}`,
   );
 
   return {
-    version: 8,
+    version: 8 as const,
     // A raster basemap serves no glyphs, but the cluster counts are text.
     glyphs: "https://tiles.versatiles.org/assets/glyphs/{fontstack}/{range}.pbf",
     sources: {
       carto: {
-        type: "raster",
+        type: "raster" as const,
         tiles,
         tileSize: 256,
         maxzoom: 20,
         attribution:
-          '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+          '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
       },
     },
     layers: [
-      { id: "background", type: "background", paint: { "background-color": "#E9EBE8" } },
-      { id: "carto", type: "raster", source: "carto" },
+      { id: "bg", type: "background" as const, paint: { "background-color": "#eef1f5" } },
+      { id: "carto", type: "raster" as const, source: "carto" },
     ],
   };
 }
 
 /** A style URL or an inline style - MapLibre accepts either. */
-export function buildMapStyle(): StyleSpecification | string {
-  if (STYLE_URL) return STYLE_URL;
-  if (CARTO_KEY) return cartoStyle(CARTO_KEY);
-  return OPENFREEMAP_POSITRON;
+export function basemapStyle(id: BasemapId) {
+  if (process.env.NEXT_PUBLIC_MAP_STYLE_URL) return process.env.NEXT_PUBLIC_MAP_STYLE_URL;
+  if (CARTO_KEY) return cartoStyle(id, CARTO_KEY);
+  return OPENFREEMAP[id];
 }

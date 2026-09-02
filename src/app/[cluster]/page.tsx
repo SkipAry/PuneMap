@@ -88,7 +88,7 @@ export default async function ClusterPage({ params }: Params) {
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="text-3xl">Industrial sheds and warehouses on rent in {cluster}</h1>
-        <p className="mt-2 max-w-[70ch] text-base text-steel">
+        <p className="mt-2 max-w-[70ch] text-base text-muted">
           {rows.length} {rows.length === 1 ? "property" : "properties"} currently available around{" "}
           {cluster}. The ranges below count only what brokers actually stated — nothing here is
           estimated.
@@ -100,7 +100,7 @@ export default async function ClusterPage({ params }: Params) {
               <div key={f.label} className="spec-cell">
                 <dd className="num spec-value">{f.value}</dd>
                 <div className="spec-rule" aria-hidden="true" />
-                <dt className="spec-label">
+                <dt className="label">
                   {f.label}
                   <span className="block">{f.note}</span>
                 </dt>
@@ -111,7 +111,7 @@ export default async function ClusterPage({ params }: Params) {
         </div>
 
         <p className="mt-5">
-          <Link href={`/?cluster=${slug}`} className="chip inline-block px-3 py-2 text-signal">
+          <Link href={`/?cluster=${slug}`} className="chip inline-block px-3 py-2 text-action">
             Filter these {rows.length} listings by height, crane and power →
           </Link>
         </p>

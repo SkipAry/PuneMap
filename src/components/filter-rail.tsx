@@ -18,6 +18,7 @@ import {
   type CraneFilter,
   type Filters,
 } from "@/lib/filters";
+import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, FLOORING_TYPES } from "@/lib/types";
 
 import { CheckboxList, Chip, ChipRow, DualRange, MinRange, Toggle } from "./filter-controls";
@@ -221,6 +222,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
                 <Chip
                   key={c}
                   label={c}
+                  zone={zoneOf(c)}
                   pressed={filters.clusters.includes(c)}
                   onClick={() =>
                     patch({
@@ -244,7 +246,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
         </Group>
       </div>
 
-      <div className="flex items-baseline justify-between border-t border-rule bg-paper px-4 py-2">
+      <div className="flex items-baseline justify-between border-t border-line px-4 py-2.5">
         <p className="text-sm">
           Showing <span className="num">{fmtNumber(shown)}</span> of{" "}
           <span className="num">{fmtNumber(total)}</span>

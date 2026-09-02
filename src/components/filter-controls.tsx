@@ -7,13 +7,24 @@ export function Chip({
   label,
   pressed,
   onClick,
+  /** Cluster chips carry their zone hue, so chip, pin and card edge agree. */
+  zone,
 }: {
   label: string;
   pressed: boolean;
   onClick: () => void;
+  zone?: string;
 }) {
   return (
-    <button type="button" className="chip" aria-pressed={pressed} onClick={onClick}>
+    <button
+      type="button"
+      className="chip"
+      aria-pressed={pressed}
+      data-zone={zone ? "" : undefined}
+      style={zone ? ({ ["--zone"]: zone } as React.CSSProperties) : undefined}
+      onClick={onClick}
+    >
+      {zone ? <span className="chip-dot" aria-hidden="true" /> : null}
       {label}
     </button>
   );

@@ -22,7 +22,7 @@ export function StaticLocator({
         className="card flex items-center justify-center px-4 text-center"
         style={{ height }}
       >
-        <p className="spec-label">
+        <p className="label">
           Coordinates not stated by the broker. Location confirmed on enquiry.
         </p>
       </div>

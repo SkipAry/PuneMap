@@ -4,8 +4,9 @@ import * as maplibregl from "maplibre-gl";
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
-import { buildMapStyle } from "@/lib/map-style";
-import { AVAILABILITY_COLOUR, type Listing } from "@/lib/types";
+import { ZONE, zoneOf } from "@/lib/clusters";
+import { basemapStyle, type BasemapId } from "@/lib/map-style";
+import type { Listing } from "@/lib/types";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -15,27 +16,24 @@ const PUNE_CENTRE: [number, number] = [73.9, 18.66];
 const RADIUS_BY_AREA: maplibregl.ExpressionSpecification = [
   "step",
   ["coalesce", ["get", "area"], 0],
-  4,
-  20_000,
   6,
-  50_000,
+  20_000,
   8,
+  50_000,
+  10,
   120_000,
-  11,
+  13,
 ];
 
-const COLOUR_BY_AVAILABILITY: maplibregl.ExpressionSpecification = [
-  "match",
-  ["get", "availability"],
-  "Ready",
-  AVAILABILITY_COLOUR.Ready,
-  "Under construction",
-  AVAILABILITY_COLOUR["Under construction"],
-  "Built-to-suit",
-  AVAILABILITY_COLOUR["Built-to-suit"],
-  "Leased out",
-  AVAILABILITY_COLOUR["Leased out"],
-  "#4A5C6A",
+/**
+ * Hue is the cluster zone, always. Availability is carried by the ring.
+ * Read straight off the feature so the expression stays typed and the palette
+ * has a single home in lib/clusters.
+ */
+const ZONE_COLOUR: maplibregl.ExpressionSpecification = [
+  "coalesce",
+  ["get", "zone"],
+  ZONE.Other,
 ];
 
 function toGeoJson(listings: Listing[]): GeoJSON.FeatureCollection {
@@ -48,7 +46,10 @@ function toGeoJson(listings: Listing[]): GeoJSON.FeatureCollection {
         geometry: { type: "Point", coordinates: [l.lng as number, l.lat as number] },
         properties: {
           slug: l.slug,
+          cluster: l.cluster,
+          zone: zoneOf(l.cluster),
           availability: l.availability,
+          leased: l.availability === "Leased out" ? 1 : 0,
           area: l.total_builtup ?? 0,
         },
       })),
@@ -59,16 +60,143 @@ type Props = {
   listings: Listing[];
   activeSlug: string | null;
   hoverSlug: string | null;
+  basemap: BasemapId;
   onSelect: (slug: string) => void;
 };
 
-export default function ListingMap({ listings, activeSlug, hoverSlug, onSelect }: Props) {
+export default function ListingMap({
+  listings,
+  activeSlug,
+  hoverSlug,
+  basemap,
+  onSelect,
+}: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MapLibreMap | null>(null);
   const ready = useRef(false);
-  // Kept in a ref so the click handler is registered once and never goes stale.
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const listingsRef = useRef(listings);
+  listingsRef.current = listings;
+
+  /** Source and layers are re-added whenever the basemap style swaps them out. */
+  const addLayers = (instance: MapLibreMap) => {
+    if (instance.getSource("listings")) return;
+
+    instance.addSource("listings", {
+      type: "geojson",
+      data: toGeoJson(listingsRef.current),
+      cluster: listingsRef.current.filter((l) => l.lat !== null).length > 40,
+      clusterRadius: 46,
+      clusterMaxZoom: 12,
+    });
+
+    instance.addLayer({
+      id: "clusters",
+      type: "circle",
+      source: "listings",
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": "#ffffff",
+        "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 25, 24],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#101828",
+      },
+    });
+
+    instance.addLayer({
+      id: "cluster-count",
+      type: "symbol",
+      source: "listings",
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["noto_sans_regular"],
+        "text-size": 12,
+      },
+      paint: { "text-color": "#101828" },
+    });
+
+    // Soft halo, so a pin stays findable over busy basemap colour.
+    instance.addLayer({
+      id: "pin-halo",
+      type: "circle",
+      source: "listings",
+      filter: ["!", ["has", "point_count"]],
+      paint: {
+        "circle-color": ZONE_COLOUR,
+        "circle-radius": ["+", RADIUS_BY_AREA, 7],
+        "circle-opacity": 0.18,
+      },
+    });
+
+    instance.addLayer({
+      id: "pins",
+      type: "circle",
+      source: "listings",
+      filter: ["!", ["has", "point_count"]],
+      paint: {
+        // Built-to-suit reads hollow: white fill, zone ring.
+        "circle-color": [
+          "case",
+          ["==", ["get", "availability"], "Built-to-suit"],
+          "#ffffff",
+          ZONE_COLOUR,
+        ],
+        "circle-radius": RADIUS_BY_AREA,
+        "circle-opacity": ["case", ["==", ["get", "leased"], 1], 0.45, 1],
+        "circle-stroke-width": 2.5,
+        "circle-stroke-color": [
+          "case",
+          ["==", ["get", "availability"], "Built-to-suit"],
+          ZONE_COLOUR,
+          "#ffffff",
+        ],
+        "circle-stroke-opacity": ["case", ["==", ["get", "leased"], 1], 0.5, 1],
+      },
+    });
+
+    instance.addLayer({
+      id: "pin-highlight",
+      type: "circle",
+      source: "listings",
+      filter: ["==", ["get", "slug"], ""],
+      paint: {
+        "circle-color": ZONE_COLOUR,
+        "circle-radius": ["+", RADIUS_BY_AREA, 4],
+        "circle-stroke-width": 3,
+        "circle-stroke-color": "#101828",
+      },
+    });
+
+    instance.on("click", "pins", (e) => {
+      const slug = e.features?.[0]?.properties?.slug;
+      if (typeof slug === "string") onSelectRef.current(slug);
+    });
+
+    instance.on("click", "clusters", (e) => {
+      const feature = e.features?.[0];
+      const clusterId = feature?.properties?.cluster_id;
+      if (clusterId === undefined) return;
+      const source = instance.getSource("listings") as GeoJSONSource;
+      void source.getClusterExpansionZoom(clusterId).then((zoom) => {
+        instance.easeTo({
+          center: (feature!.geometry as GeoJSON.Point).coordinates as [number, number],
+          zoom,
+          duration: 250,
+        });
+      });
+    });
+
+    for (const id of ["pins", "clusters"]) {
+      instance.on("mouseenter", id, () => {
+        instance.getCanvas().style.cursor = "pointer";
+      });
+      instance.on("mouseleave", id, () => {
+        instance.getCanvas().style.cursor = "";
+      });
+    }
+  };
 
   useEffect(() => {
     if (!container.current || map.current) return;
@@ -76,113 +204,22 @@ export default function ListingMap({ listings, activeSlug, hoverSlug, onSelect }
     const instance = new maplibregl.Map({
       container: container.current,
       center: PUNE_CENTRE,
-      zoom: 8.6,
+      zoom: 8.8,
       attributionControl: { compact: true },
-      style: buildMapStyle(),
+      style: basemapStyle("light"),
     });
 
-    instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
     instance.scrollZoom.disable();
 
     instance.on("load", () => {
-      instance.addSource("listings", {
-        type: "geojson",
-        data: toGeoJson(listings),
-        // Above 40 markers the pins collide, so let MapLibre group them and
-        // split them again as the user zooms in.
-        cluster: listings.filter((l) => l.lat !== null).length > 40,
-        clusterRadius: 44,
-        clusterMaxZoom: 12,
-      });
-
-      instance.addLayer({
-        id: "clusters",
-        type: "circle",
-        source: "listings",
-        filter: ["has", "point_count"],
-        paint: {
-          "circle-color": "#E9EBE8",
-          "circle-radius": ["step", ["get", "point_count"], 12, 10, 16, 25, 20],
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#16191A",
-        },
-      });
-
-      instance.addLayer({
-        id: "cluster-count",
-        type: "symbol",
-        source: "listings",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["noto_sans_regular"],
-          "text-size": 11,
-        },
-        paint: { "text-color": "#16191A" },
-      });
-
-      instance.addLayer({
-        id: "pins",
-        type: "circle",
-        source: "listings",
-        filter: ["!", ["has", "point_count"]],
-        paint: {
-          "circle-color": COLOUR_BY_AVAILABILITY,
-          "circle-radius": RADIUS_BY_AREA,
-          "circle-opacity": [
-            "case",
-            ["==", ["get", "availability"], "Leased out"],
-            0.6,
-            0.9,
-          ],
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#FBFBFA",
-        },
-      });
-
-      // Drawn on top; empty filter until a card is hovered or a pin selected.
-      instance.addLayer({
-        id: "pin-highlight",
-        type: "circle",
-        source: "listings",
-        filter: ["==", ["get", "slug"], ""],
-        paint: {
-          "circle-color": "#E24A0F",
-          "circle-radius": ["+", RADIUS_BY_AREA, 2],
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#16191A",
-        },
-      });
-
-      instance.on("click", "pins", (e) => {
-        const slug = e.features?.[0]?.properties?.slug;
-        if (typeof slug === "string") onSelectRef.current(slug);
-      });
-
-      instance.on("click", "clusters", (e) => {
-        const feature = e.features?.[0];
-        const clusterId = feature?.properties?.cluster_id;
-        if (clusterId === undefined) return;
-        const source = instance.getSource("listings") as GeoJSONSource;
-        void source.getClusterExpansionZoom(clusterId).then((zoom) => {
-          instance.easeTo({
-            center: (feature!.geometry as GeoJSON.Point).coordinates as [number, number],
-            zoom,
-            duration: 250,
-          });
-        });
-      });
-
-      for (const id of ["pins", "clusters"]) {
-        instance.on("mouseenter", id, () => {
-          instance.getCanvas().style.cursor = "pointer";
-        });
-        instance.on("mouseleave", id, () => {
-          instance.getCanvas().style.cursor = "";
-        });
-      }
-
+      addLayers(instance);
       ready.current = true;
+    });
+
+    // A style swap wipes custom sources, so they are re-added each time.
+    instance.on("styledata", () => {
+      if (ready.current) addLayers(instance);
     });
 
     map.current = instance;
@@ -192,17 +229,20 @@ export default function ListingMap({ listings, activeSlug, hoverSlug, onSelect }
       instance.remove();
       map.current = null;
     };
-    // Sources are updated in the effects below; this runs once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-filtering the list re-feeds the map. No auto-fly, no fitBounds - the
-  // viewport stays where the user put it.
   useEffect(() => {
     const instance = map.current;
     if (!instance || !ready.current) return;
-    const source = instance.getSource("listings") as GeoJSONSource | undefined;
-    source?.setData(toGeoJson(listings));
+    instance.setStyle(basemapStyle(basemap) as never);
+  }, [basemap]);
+
+  // No auto-fly and no fitBounds: the viewport stays where the user put it.
+  useEffect(() => {
+    const instance = map.current;
+    if (!instance || !ready.current) return;
+    (instance.getSource("listings") as GeoJSONSource | undefined)?.setData(toGeoJson(listings));
   }, [listings]);
 
   useEffect(() => {

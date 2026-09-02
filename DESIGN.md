@@ -97,6 +97,13 @@ components:
     padding: "0 6px"
 ---
 
+> **SUPERSEDED — do not build to this file.** On 3 Sep 2026 the owner replaced this
+> visual world with "The Estate Wayfinding System": full-bleed map, floating sign panels,
+> per-cluster zone colour, Light/Voyager basemaps. The search screen is rebuilt; the
+> detail, cluster and about pages still carry retired styling. This file is rewritten from
+> the shipped code once the world is complete across all surfaces. Until then the binding
+> record is `.impeccable/surfaces/src-app-page-tsx.md`.
+
 # Design System: Pune Industrial Space
 
 ## Overview
