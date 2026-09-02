@@ -80,7 +80,9 @@ export const AVAILABILITY_COLOUR: Record<string, string> = {
   Ready: "#2F6B4F",
   "Under construction": "#8A6D1F",
   "Built-to-suit": "#4A5C6A",
-  "Leased out": "#9A9A96",
+  // Darkened from #9A9A96 to clear 4.5:1 on chalk; the map keeps it muted via
+  // layer opacity rather than a washed-out hex.
+  "Leased out": "#6B6B67",
 };
 
 /** URL slug for a cluster, e.g. "Chakan" -> "chakan". Used by /[cluster] and ?cluster=. */

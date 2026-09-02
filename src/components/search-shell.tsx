@@ -31,20 +31,28 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
   const result = useMemo(() => applyFilters(all, filters), [all, filters]);
 
+  /*
+    Discrete choices push, so Back walks the filter stack the way a user expects.
+    Continuous controls replace: a slider fires per step, and pushing each one
+    would bury the previous filter under thirty history entries.
+  */
   const write = useCallback(
-    (next: Filters) => {
+    (next: Filters, history: "push" | "replace" = "push") => {
       const qs = serialiseFilters(next).toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      const url = qs ? `${pathname}?${qs}` : pathname;
+      if (history === "replace") router.replace(url, { scroll: false });
+      else router.push(url, { scroll: false });
     },
     [router, pathname],
   );
 
   const patch = useCallback(
-    (part: Partial<Filters>) => write({ ...filters, ...part }),
+    (part: Partial<Filters>, history: "push" | "replace" = "push") =>
+      write({ ...filters, ...part }, history),
     [filters, write],
   );
 
-  const clearAll = useCallback(() => router.replace(pathname, { scroll: false }), [router, pathname]);
+  const clearAll = useCallback(() => router.push(pathname, { scroll: false }), [router, pathname]);
 
   /*
     The one orchestrated moment: cards that no longer match fade out over 120ms,
@@ -197,7 +205,9 @@ export function SearchShell({ all }: { all: Listing[] }) {
               No shed matches all {activeCount} {activeCount === 1 ? "filter" : "filters"}.
               {result.closestMiss ? ` The closest miss is ${describeMiss(result.closestMiss)}.` : ""}
             </p>
-            <button type="button" className="mt-3 text-sm text-signal underline" onClick={clearAll}>
+            {/* A reset is the user's own action, so it stays ink; signal in this
+                block belongs to Include them, the null reversal. */}
+            <button type="button" className="mt-3 text-sm underline" onClick={clearAll}>
               Clear all filters
             </button>
           </div>

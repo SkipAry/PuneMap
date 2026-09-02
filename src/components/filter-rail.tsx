@@ -34,8 +34,15 @@ const CRANE_CHIPS: { label: string; value: CraneFilter | null }[] = [
   { label: "20T+", value: 20 },
 ];
 
+/** Reads the live crane value, whichever chip (if any) happens to match it. */
+const craneReadout = (v: CraneFilter | null) => {
+  if (v === null) return "any";
+  if (v === "provision") return "provision";
+  return `${v}T+`;
+};
+
 const DOCK_CHIPS = [
-  { label: "0", value: null },
+  { label: "Any", value: null },
   { label: "1+", value: 1 },
   { label: "2+", value: 2 },
   { label: "4+", value: 4 },
@@ -52,7 +59,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 
 type Props = {
   filters: Filters;
-  patch: (next: Partial<Filters>) => void;
+  patch: (next: Partial<Filters>, history?: "push" | "replace") => void;
   clearAll: () => void;
   shown: number;
   total: number;
@@ -78,7 +85,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
               max={HEIGHT_MAX}
               step={HEIGHT_STEP}
               format={(n) => `${n.toFixed(1)}m+`}
-              onChange={(v) => patch({ minHeight: v })}
+              onChange={(v) => patch({ minHeight: v }, "replace")}
             />
             <div className="mt-1.5">
               <ChipRow>
@@ -95,14 +102,18 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
           </div>
 
           <div>
-            <span className="field-label">Crane capacity</span>
+            {/* The readout is driven by the value, not by a matching chip, so a
+                crane constraint from a shared URL can never be invisible. */}
+            <div className="flex items-baseline justify-between">
+              <span className="field-label">Crane capacity</span>
+              <span className="num text-sm">{craneReadout(filters.crane)}</span>
+            </div>
             <ChipRow>
               {CRANE_CHIPS.map((c) => (
                 <Chip
                   key={c.label}
                   label={c.label}
-                  pressed={filters.crane === c.value}
-                  neutral={c.value === null}
+                  pressed={c.value !== null && filters.crane === c.value}
                   onClick={() => patch({ crane: c.value })}
                 />
               ))}
@@ -117,7 +128,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
               max={POWER_MAX}
               step={POWER_STEP}
               format={(n) => `${fmtNumber(n)} HP+`}
-              onChange={(v) => patch({ minPower: v })}
+              onChange={(v) => patch({ minPower: v }, "replace")}
             />
             <div className="mt-1.5">
               <ChipRow>
@@ -147,8 +158,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
                 <Chip
                   key={d.label}
                   label={d.label}
-                  pressed={(filters.minDocks ?? null) === d.value}
-                  neutral={d.value === null}
+                  pressed={d.value !== null && filters.minDocks === d.value}
                   onClick={() => patch({ minDocks: d.value })}
                 />
               ))}
@@ -177,7 +187,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
             format={(n) => `${fmtNumber(n)}`}
             scale={areaScale}
             unscale={areaUnscale}
-            onChange={(lo, hi) => patch({ minArea: lo, maxArea: hi })}
+            onChange={(lo, hi) => patch({ minArea: lo, maxArea: hi }, "replace")}
           />
         </Group>
 
@@ -189,7 +199,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
             min={RATE_MIN}
             max={RATE_MAX}
             format={(n) => fmtRupees(n)}
-            onChange={(lo, hi) => patch({ minRate: lo, maxRate: hi })}
+            onChange={(lo, hi) => patch({ minRate: lo, maxRate: hi }, "replace")}
           />
           <DualRange
             label="Monthly rent"
@@ -199,7 +209,7 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
             max={RENT_MAX}
             step={100_000}
             format={(n) => `${fmtRupees(Math.round(n / 100_000))}L`}
-            onChange={(lo, hi) => patch({ minRent: lo, maxRent: hi })}
+            onChange={(lo, hi) => patch({ minRent: lo, maxRent: hi }, "replace")}
           />
         </Group>
 

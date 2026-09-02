@@ -15,7 +15,7 @@
   --color-ready: #2f6b4f;
   --color-building: #8a6d1f;
   --color-bts: #4a5c6a;
-  --color-leased: #9a9a96;
+  --color-leased: #6b6b67;
 
   /* Hairline rules are the drawing's dimension lines - the one repeated motif. */
   --color-rule: color-mix(in srgb, #16191a 12%, transparent);
@@ -144,16 +144,16 @@
     cursor: pointer;
   }
 
-  .chip[data-neutral="true"][aria-pressed="true"] {
+  /*
+    An active filter is marked in ink, not signal. Signal is reserved for what
+    the tool is reporting about itself - the focus ring, the highlighted pin,
+    and the control that reverses a null exclusion - so orange always means the
+    same thing and the two-marks cap holds at any filter count.
+  */
+  .chip[aria-pressed="true"] {
     border-color: var(--color-ink);
     color: var(--color-ink);
     box-shadow: inset 0 0 0 1px var(--color-ink);
-  }
-
-  .chip[aria-pressed="true"] {
-    border-color: var(--color-signal);
-    color: var(--color-signal);
-    box-shadow: inset 0 0 0 1px var(--color-signal);
   }
 
   /*
@@ -293,9 +293,9 @@ input[type="range"]:focus-visible::-moz-range-thumb {
   box-shadow: 0 0 0 2px var(--color-signal);
 }
 
-/* MapLibre chrome, brought into the palette. */
+/* MapLibre chrome, brought into the palette and onto the type ramp. */
 .maplibregl-ctrl-attrib {
-  font-size: 10px;
+  font-size: var(--text-xs);
   background: color-mix(in srgb, var(--color-chalk) 85%, transparent) !important;
 }
 

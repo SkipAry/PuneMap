@@ -7,22 +7,13 @@ export function Chip({
   label,
   pressed,
   onClick,
-  /** "no constraint" options are marked in ink, so signal only ever means a live filter. */
-  neutral = false,
 }: {
   label: string;
   pressed: boolean;
   onClick: () => void;
-  neutral?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      className="chip"
-      aria-pressed={pressed}
-      data-neutral={neutral || undefined}
-      onClick={onClick}
-    >
+    <button type="button" className="chip" aria-pressed={pressed} onClick={onClick}>
       {label}
     </button>
   );

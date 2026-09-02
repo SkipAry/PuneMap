@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-02T17:20:00.000Z",
+  "title": "Design System: Pune Industrial Space",
+  "extensions": {
+    "colorMeta": {
+      "hazard-signal": {
+        "role": "primary",
+        "displayName": "Hazard Signal",
+        "canonical": "#e24a0f",
+        "tonalRamp": [
+          "#2b0d02",
+          "#4d1705",
+          "#70210a",
+          "#94300f",
+          "#b83a12",
+          "#e24a0f",
+          "#f0855a",
+          "#f9c9b4"
+        ]
+      },
+      "concrete-paper": {
+        "role": "neutral",
+        "displayName": "Concrete Paper",
+        "canonical": "#e9ebe8",
+        "tonalRamp": [
+          "#1e211f",
+          "#33372f",
+          "#4d534b",
+          "#6b7269",
+          "#8f958c",
+          "#b4b9b1",
+          "#d3d7d1",
+          "#e9ebe8"
+        ]
+      },
+      "drawing-ink": {
+        "role": "neutral",
+        "displayName": "Drawing Ink",
+        "canonical": "#16191a",
+        "tonalRamp": [
+          "#16191a",
+          "#22282a",
+          "#333b3e",
+          "#4a5459",
+          "#6a7679",
+          "#95a0a3",
+          "#c2cacc",
+          "#e7ebec"
+        ]
+      },
+      "gantry-steel": {
+        "role": "neutral",
+        "displayName": "Gantry Steel",
+        "canonical": "#4a5c6a",
+        "tonalRamp": [
+          "#101519",
+          "#1c252c",
+          "#2b3841",
+          "#3a4b57",
+          "#4a5c6a",
+          "#6d8291",
+          "#9dafba",
+          "#cfd9e0"
+        ]
+      },
+      "chalk-surface": {
+        "role": "neutral",
+        "displayName": "Chalk Surface",
+        "canonical": "#fbfbfa",
+        "tonalRamp": [
+          "#212120",
+          "#373735",
+          "#4f4f4c",
+          "#6d6d69",
+          "#93938e",
+          "#b8b8b3",
+          "#dcdcd8",
+          "#fbfbfa"
+        ]
+      },
+      "status-ready": {
+        "role": "tertiary",
+        "displayName": "Ready",
+        "canonical": "#2f6b4f",
+        "tonalRamp": [
+          "#0a1a13",
+          "#12291f",
+          "#1c3f2f",
+          "#25553f",
+          "#2f6b4f",
+          "#4a9370",
+          "#7bbb9b",
+          "#b8ddca"
+        ]
+      },
+      "status-under-construction": {
+        "role": "tertiary",
+        "displayName": "Under construction",
+        "canonical": "#8a6d1f",
+        "tonalRamp": [
+          "#1c1606",
+          "#2f240a",
+          "#473710",
+          "#5f4915",
+          "#8a6d1f",
+          "#b8933a",
+          "#d7ba72",
+          "#eddcb4"
+        ]
+      },
+      "status-built-to-suit": {
+        "role": "tertiary",
+        "displayName": "Built-to-suit",
+        "canonical": "#4a5c6a",
+        "tonalRamp": [
+          "#101519",
+          "#1c252c",
+          "#2b3841",
+          "#3a4b57",
+          "#4a5c6a",
+          "#6d8291",
+          "#9dafba",
+          "#cfd9e0"
+        ]
+      },
+      "status-leased-out": {
+        "role": "tertiary",
+        "displayName": "Leased out",
+        "canonical": "#6b6b67",
+        "tonalRamp": [
+          "#141413",
+          "#242422",
+          "#363634",
+          "#4c4c49",
+          "#6b6b67",
+          "#93938e",
+          "#bdbdb9",
+          "#e3e3e1"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles on detail and cluster pages. Left aligned always."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Result card headline - the area-and-type line."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Section headings, always sitting over a 1px hairline rule."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, capped at 70ch. The only tier that wraps at length."
+      },
+      "numeric": {
+        "displayName": "Numeric",
+        "purpose": "Every comparable number. Tabular figures are mandatory here."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Spec labels and metadata, in Gantry Steel. Sentence case, never uppercase."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "filter-fade-out",
+        "value": "opacity 120ms linear",
+        "purpose": "Cards that no longer match a filter fade to 0 before the list reflows."
+      },
+      {
+        "name": "list-reflow",
+        "value": "200ms ease-out",
+        "purpose": "The list settles into its new order. The only orchestrated moment in the system."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0ms",
+        "purpose": "Under prefers-reduced-motion every transition duration collapses to zero."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "floor",
+        "value": "360px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Spec Strip",
+      "kind": "custom",
+      "refersTo": "spec-cell",
+      "description": "The signature component: five fixed cells, number over hairline over label. Never collapses or reorders.",
+      "html": "<dl class=\"ds-spec-strip\"><div class=\"ds-spec-cell\"><dd class=\"ds-spec-value\">13.0m</dd><div class=\"ds-spec-rule\"></div><dt class=\"ds-spec-label\">height</dt></div><div class=\"ds-spec-cell\"><dd class=\"ds-spec-value\">10T</dd><div class=\"ds-spec-rule\"></div><dt class=\"ds-spec-label\">crane</dt></div><div class=\"ds-spec-cell\"><dd class=\"ds-spec-value\">100HP</dd><div class=\"ds-spec-rule\"></div><dt class=\"ds-spec-label\">power</dt></div><div class=\"ds-spec-cell\"><dd class=\"ds-spec-value\">4</dd><div class=\"ds-spec-rule\"></div><dt class=\"ds-spec-label\">docks</dt></div><div class=\"ds-spec-cell\"><dd class=\"ds-spec-value ds-unknown\" title=\"Not stated in the listing\">—</dd><div class=\"ds-spec-rule\"></div><dt class=\"ds-spec-label\">floor</dt></div></dl>",
+      "css": ".ds-spec-strip{display:grid;grid-template-columns:repeat(5,1fr);border-radius:0;margin:0;font-family:'Google Sans',system-ui,sans-serif}.ds-spec-cell{padding-right:6px;min-width:0}.ds-spec-cell+.ds-spec-cell{padding-left:6px;border-left:1px solid color-mix(in srgb,#16191a 12%,transparent)}.ds-spec-value{font-size:15px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;color:#16191a}.ds-unknown{color:#4a5c6a}.ds-spec-rule{height:1px;background:color-mix(in srgb,#16191a 12%,transparent);margin:4px 0}.ds-spec-label{font-size:11px;font-weight:500;letter-spacing:.015em;color:#4a5c6a;line-height:1.2}"
+    },
+    {
+      "name": "Listing Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Chalk surface on concrete ground, 1px edge, no shadow, height reserved against reflow.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-top\"><span class=\"ds-card-label\">Chakan MIDC Phase II</span><span class=\"ds-status\">Ready</span></div><h3 class=\"ds-card-title\">45,000 sq ft shed</h3></article>",
+      "css": ".ds-card{background:#fbfbfa;border:1px solid color-mix(in srgb,#16191a 10%,transparent);border-radius:2px;padding:12px;min-height:80px;font-family:'Google Sans',system-ui,sans-serif}.ds-card-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.ds-card-label{font-size:11px;font-weight:500;letter-spacing:.015em;color:#4a5c6a}.ds-status{font-size:11px;font-weight:500;letter-spacing:.015em;color:#2f6b4f}.ds-card-title{font-size:19px;font-weight:700;line-height:1.05;letter-spacing:-.015em;margin:2px 0 0;color:#16191a}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Default and active states. Active is marked in Drawing Ink; no-constraint options are resets and never render pressed.",
+      "html": "<div class=\"ds-chiprow\"><button class=\"ds-chip\" aria-pressed=\"false\">9m+</button><button class=\"ds-chip\" aria-pressed=\"true\">12m+</button><button class=\"ds-chip\" aria-pressed=\"false\">Any</button></div>",
+      "css": ".ds-chiprow{display:flex;gap:6px;font-family:'Google Sans',system-ui,sans-serif}.ds-chip{border:1px solid color-mix(in srgb,#16191a 10%,transparent);border-radius:4px;background:transparent;font-size:13px;padding:6px 10px;min-height:28px;color:#16191a;cursor:pointer;font-family:inherit}.ds-chip[aria-pressed=\"true\"]{border-color:#16191a;color:#16191a;box-shadow:inset 0 0 0 1px #16191a}.ds-chip:hover{border-color:color-mix(in srgb,#16191a 30%,transparent)}.ds-chip:focus-visible{outline:2px solid #e24a0f;outline-offset:2px}"
+    },
+    {
+      "name": "Drawn Checkbox",
+      "kind": "input",
+      "refersTo": "checkbox",
+      "description": "24px hit area, 14px drawn mark. Native appearance removed so the touch minimum is met without a heavy-looking control.",
+      "html": "<label class=\"ds-check-row\"><input type=\"checkbox\" class=\"ds-checkbox\" checked><span>Trimix</span></label>",
+      "css": ".ds-check-row{display:flex;align-items:center;gap:6px;min-height:28px;font-family:'Google Sans',system-ui,sans-serif;font-size:13px;color:#16191a;cursor:pointer}.ds-checkbox{appearance:none;-webkit-appearance:none;width:24px;height:24px;margin:0;display:grid;place-content:center;background:transparent;border:0;cursor:pointer}.ds-checkbox::before{content:\"\";width:14px;height:14px;border:1px solid #16191a;border-radius:2px;background:#fbfbfa}.ds-checkbox:checked::before{background:#e24a0f;border-color:#e24a0f;box-shadow:inset 0 0 0 2px #fbfbfa}.ds-checkbox:focus-visible{outline:2px solid #e24a0f;outline-offset:2px}"
+    },
+    {
+      "name": "Gauge Range",
+      "kind": "input",
+      "refersTo": "chip",
+      "description": "Track is a 1px rule; the thumb is a 2x14px tick - a gauge mark, not a knob.",
+      "html": "<input type=\"range\" class=\"ds-range\" min=\"6\" max=\"20\" step=\"0.5\" value=\"12\" aria-label=\"Clear height minimum\">",
+      "css": ".ds-range{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}.ds-range::-webkit-slider-runnable-track{height:1px;background:#16191a;opacity:.35}.ds-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:2px;height:14px;margin-top:-6.5px;background:#16191a;border:0;border-radius:0}.ds-range:focus-visible::-webkit-slider-thumb{background:#e24a0f;box-shadow:0 0 0 2px #e24a0f}"
+    },
+    {
+      "name": "Section Heading",
+      "kind": "nav",
+      "refersTo": "card",
+      "description": "13px bold over a hairline rule - the drawing-sheet section marker.",
+      "html": "<h2 class=\"ds-group-heading\">Building specs</h2>",
+      "css": ".ds-group-heading{font-family:'Google Sans',system-ui,sans-serif;font-size:13px;font-weight:700;letter-spacing:.01em;padding-bottom:6px;border-bottom:1px solid color-mix(in srgb,#16191a 12%,transparent);margin:0 0 12px;color:#16191a}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Title Block",
+    "overview": "A title block is the boxed panel in the corner of an engineering drawing where every dimension, material and tolerance is named, in fixed positions, so a reader can find any value without hunting. Nothing in it is decorative. A blank field means the value was not specified - it never means zero.\n\nThat is the whole system. The five-cell spec strip on every result card is a title block: the same five specs, in the same order, in the same horizontal positions, on every card, so a user scanning twenty listings compares the same number in the same place every time. That alignment is not a styling choice; it is the product working.\n\nThe register is exact, quiet and unornamented. The contrast between card and page is deliberately low, because the numbers carry the hierarchy, not the container. Components are drawn, not styled: they read as marks on a drawing rather than as web widgets.",
+    "keyCharacteristics": [
+      "Five colour values, no gradients anywhere",
+      "Hairline rules (1px, ink at 12%) as the single repeated motif",
+      "Tabular figures everywhere a number appears - mandatory, not preference",
+      "Flat: no shadows at all, depth from 1px borders and tonal ground",
+      "Sentence case throughout; never uppercase labels",
+      "One accent colour, capped at two appearances per screen"
+    ],
+    "rules": [
+      {
+        "name": "The Two Marks Rule",
+        "body": "Hazard Signal appears at most twice on any given screen, and never on a control the user set. Active filters are marked in Drawing Ink; signal is reserved for the focus ring, the highlighted pin, and the null-exclusion reversal.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Warmth Rule",
+        "body": "Warm cream backgrounds, terracotta, clay accents, near-black grounds with acid green, gradient washes and glassmorphism are banned outright. The ground is cool and mineral or it is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Unknown Is Grey Rule",
+        "body": "An unstated value renders as an em dash in Gantry Steel, never in Drawing Ink. Stated data is ink; absence is steel. A user must be able to tell the two apart at scanning speed without reading.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Any number a user might compare against another number uses font-variant-numeric: tabular-nums. Proportional figures break the vertical scan, which is the one thing this interface exists to support.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels are sentence case. Never uppercase, never letterspaced small caps, never a monospace face standing in for technical.",
+        "section": "typography"
+      },
+      {
+        "name": "The Reserved Height Rule",
+        "body": "Result cards declare a min-height (170px) so a filter change reflows without shifting the page. Cumulative Layout Shift on the search screen is 0 and must stay 0.",
+        "section": "layout"
+      },
+      {
+        "name": "The Text Equivalent Rule",
+        "body": "The result list is always present and never behind a tab on desktop. It is the map accessible equivalent, so the map may never be the only way to read the data.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Forever Rule",
+        "body": "No box-shadow that casts. If a surface needs to feel above another, raise its tone to Chalk Surface and give it a 1px edge. A soft grey card shadow is the fastest way to make this look like the proptech apps it is defined against.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the spec strip's five cells fixed in order and position at every breakpoint; shrink the type before you touch the grid.",
+      "Do use tabular-nums on every comparable number.",
+      "Do render unknowns as an em dash in Gantry Steel with a \"Not stated in the listing\" tooltip.",
+      "Do carry depth with a 1px border and a tonal step to Chalk Surface.",
+      "Do keep labels sentence case at 11px/500 with +0.015em tracking.",
+      "Do count Hazard Signal before shipping a screen. Two is the cap, and none of them may be a control the user set."
+    ],
+    "donts": [
+      "Don't add a box-shadow that casts - not on cards, not on hover, not on the mobile sheet.",
+      "Don't introduce a warm cream or off-white ground, terracotta or clay accent, gradient wash, or glassmorphism.",
+      "Don't render an unknown as 0, N/A, or a hidden row.",
+      "Don't uppercase a label or reach for a monospace face to signal technical.",
+      "Don't put area or rent above the building specs in any filter or table ordering - that inversion is the product's reason to exist.",
+      "Don't number sections 01 / 02 / 03. Nothing here is a sequence.",
+      "Don't animate anything except the filter-change transition (120ms fade, 200ms reflow, 0ms under prefers-reduced-motion)."
+    ]
+  }
+}

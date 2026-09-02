@@ -18,9 +18,17 @@ export default async function SearchPage() {
   return (
     <>
       <SiteHeader subtitle="Sheds, warehouses and factory buildings on rent around Pune" />
-      <Suspense fallback={<div className="p-4 text-sm text-steel">Loading listings…</div>}>
-        <SearchShell all={listings} />
-      </Suspense>
+      <main>
+        {/* The page had no h1 and no landmark: the accessibility tree opened on
+            the filter group names. Visually redundant with the masthead, so it
+            is carried for assistive tech only. */}
+        <h1 className="sr-only">
+          Industrial sheds, warehouses and factory buildings on rent around Pune
+        </h1>
+        <Suspense fallback={<div className="p-4 text-sm text-steel">Loading listings…</div>}>
+          <SearchShell all={listings} />
+        </Suspense>
+      </main>
     </>
   );
 }

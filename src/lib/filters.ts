@@ -18,6 +18,9 @@ export const RATE_MAX = 60;
 export const RENT_MIN = 100_000;
 export const RENT_MAX = 5_000_000;
 
+/** Ceiling for the crane param, so a typo cannot become a silent constraint. */
+export const CRANE_MAX = 100;
+
 /** "provision" selects sheds with the gantry provision cast but no crane fitted. */
 export type CraneFilter = "provision" | number;
 
@@ -97,7 +100,7 @@ export function parseFilters(p: Params): Filters {
   if (rawCrane === "provision") crane = "provision";
   else if (rawCrane !== null && rawCrane.trim() !== "") {
     const n = Number(rawCrane);
-    if (Number.isFinite(n) && n > 0) crane = n;
+    if (Number.isFinite(n) && n > 0) crane = Math.min(CRANE_MAX, n);
   }
 
   return {
