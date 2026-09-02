@@ -64,21 +64,52 @@ functional, but the search screen does not need it.
 
 ## Map
 
-MapLibre GL with a hand-built style (`src/lib/map-style.ts`) over VersaTiles'
-free, keyless, CORS-enabled OpenStreetMap vector tiles in the Shortbread schema.
-No API key and no billing account.
+MapLibre GL JS. The basemap is resolved in `src/lib/map-style.ts`:
+
+| Condition | Basemap |
+|---|---|
+| `NEXT_PUBLIC_MAP_STYLE_URL` set | that style JSON |
+| `NEXT_PUBLIC_CARTO_API_KEY` set | CARTO raster (`light_all` / `voyager`) |
+| neither | OpenFreeMap Positron vector tiles |
+
+CARTO's CDN answers without a key but stamps every tile "API KEY REQUIRED", so
+the keyless default is OpenFreeMap's Positron - the same near-monochrome design,
+genuinely free.
+
+**This choice costs real performance.** Measured on `/`, desktop preset:
+
+| Basemap | Lighthouse performance | Total Blocking Time |
+|---|---|---|
+| CARTO raster | 96-98 | 130-160 ms |
+| OpenFreeMap Positron (vector) | 81-82 | 390-420 ms |
+
+Vector tiles are styled and laid out on the main thread; 55 style layers is
+substantially more work than decoding raster PNGs. A free CARTO key both matches
+the reference design exactly and restores the performance budget.
 
 - Pins coloured by availability, radius stepped by `total_builtup`
 - Clustered above 40 markers, declustering on zoom
 - Listings with no `lat`/`lng` are excluded from the map but stay in the list,
   tagged "Location approximate"
-- The map is imported on `requestIdleCallback`, keeping ~200KB of parse out of
-  Total Blocking Time. The result list is usable before the map arrives.
+- The map is imported on `requestIdleCallback`, so its parse stays off the
+  critical path. The result list is usable before it arrives.
 
 ## Performance
 
-Lighthouse on `/`, desktop preset: performance 91–92, accessibility 100,
-best-practices 96, SEO 100, CLS 0.
+Lighthouse on `/`, desktop preset, with the keyless Positron basemap:
+performance 81-82, accessibility 100, best-practices 96, SEO 100, CLS 0.
+With a CARTO key, performance is 96-98. See the table above.
+
+Typography is Google Sans (weights 400-700). It is not in `next/font`'s
+catalogue, so the `@font-face` rules are inlined in `src/app/google-sans.css` -
+fetched once from the Google Fonts API and committed, with the files still
+served from gstatic. Nothing is redistributed and no stylesheet request blocks
+first paint. Google Sans has no width axis, so the label tier is set by weight
+and tracking rather than a condensed cut.
+
+> `ponytail:` inlined `@font-face` pins gstatic URLs that Google rotates
+> eventually. The stack falls back to system-ui if they 404; re-run the fetch in
+> the deployment guide to refresh.
 
 Card height is reserved in CSS (`.result-card { min-height: 170px }`) so a
 filter-driven reflow shifts nothing.

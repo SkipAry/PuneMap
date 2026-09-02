@@ -9,9 +9,6 @@ import { AVAILABILITY_COLOUR, type Listing } from "@/lib/types";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
-/** Optional self-hosted style; falls back to the built-in monochrome one. */
-const STYLE_URL = process.env.NEXT_PUBLIC_MAP_STYLE_URL;
-
 const PUNE_CENTRE: [number, number] = [73.9, 18.66];
 
 /** Pin size reads built-up area before the user reads anything. */
@@ -81,7 +78,7 @@ export default function ListingMap({ listings, activeSlug, hoverSlug, onSelect }
       center: PUNE_CENTRE,
       zoom: 8.6,
       attributionControl: { compact: true },
-      style: STYLE_URL ?? buildMapStyle(),
+      style: buildMapStyle(),
     });
 
     instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");

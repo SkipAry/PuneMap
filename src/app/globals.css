@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./google-sans.css";
 
 /*
   Five values, no gradients. The reference is a structural drawing's title block:
@@ -20,7 +21,7 @@
   --color-rule: color-mix(in srgb, #16191a 12%, transparent);
   --color-edge: color-mix(in srgb, #16191a 10%, transparent);
 
-  --font-sans: var(--font-archivo), "Archivo", system-ui, sans-serif;
+  --font-sans: "Google Sans", "Google Sans Text", system-ui, -apple-system, sans-serif;
 
   /* 1.25 ratio */
   --text-xs: 0.6875rem; /* 11 */
@@ -78,11 +79,15 @@
     letter-spacing: -0.01em;
   }
 
-  /* Signage typography - condensed, sentence case, never uppercase. */
+  /*
+    Signage typography - sentence case, never uppercase. Google Sans carries no
+    width axis, so the label tier is separated by weight and tracking rather
+    than by a condensed cut.
+  */
   .spec-label {
     font-size: var(--text-xs);
-    font-weight: 400;
-    font-stretch: 75%;
+    font-weight: 500;
+    letter-spacing: 0.015em;
     color: var(--color-steel);
     line-height: 1.2;
   }
@@ -137,7 +142,6 @@
     min-height: 28px;
     color: var(--color-ink);
     cursor: pointer;
-    font-stretch: 90%;
   }
 
   .chip[data-neutral="true"][aria-pressed="true"] {
@@ -186,7 +190,8 @@
 
   .field-label {
     font-size: var(--text-xs);
-    font-stretch: 75%;
+    font-weight: 500;
+    letter-spacing: 0.015em;
     color: var(--color-steel);
     display: block;
     margin-bottom: 0.375rem;

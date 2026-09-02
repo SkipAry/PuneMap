@@ -1,18 +1,6 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
 
 import "./globals.css";
-
-/*
-  One family. Archivo's width axis is the design device - this is signage
-  typography, which is what industrial estates are actually labelled with.
-*/
-const archivo = Archivo({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  display: "swap",
-  variable: "--font-archivo",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://puneindustrialspace.in"),
@@ -27,7 +15,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={archivo.variable}>
+    <html lang="en-IN">
+      {/*
+        Only gstatic is contacted now - the @font-face rules are inlined in
+        google-sans.css, so no stylesheet request blocks first paint.
+      */}
+      <head>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      </head>
       <body className="min-h-dvh">
         <a
           href="#results"

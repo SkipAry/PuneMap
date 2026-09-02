@@ -86,20 +86,41 @@ routes.
 
 ## Map tiles
 
-Defaults to VersaTiles' free public OpenStreetMap endpoint — keyless, no billing.
-It is a community service with no uptime guarantee. Before launch, either
-self-host tiles or accept the dependency deliberately. To point at your own:
+Keyless by default: OpenFreeMap Positron vector tiles, no signup, no billing.
+
+For the CARTO basemaps (and markedly better performance - see
+`system-architecture.md`), get a free key at carto.com and set:
 
 ```
-NEXT_PUBLIC_MAP_STYLE_URL=https://your-host/style.json
+NEXT_PUBLIC_CARTO_API_KEY=<key>
+NEXT_PUBLIC_CARTO_STYLE=light_all   # or voyager
 ```
 
-Attribution to OpenStreetMap and VersaTiles is baked into the source definition
-and must stay.
+CARTO's CDN responds without a key but watermarks every tile with "API KEY
+REQUIRED", so do not ship keyless CARTO.
+
+To use any other style, `NEXT_PUBLIC_MAP_STYLE_URL` takes a full style JSON and
+overrides both.
+
+Attribution to OpenStreetMap and the tile provider is baked into the source
+definition and must stay.
+
+## Fonts
+
+Google Sans, loaded from Google Fonts. It is not in `next/font`'s catalogue, so
+`src/app/google-sans.css` holds the `@font-face` rules inlined (latin subsets
+only) with the files still served from gstatic. If Google rotates those URLs and
+text falls back to system-ui, refresh them:
+
+```bash
+curl -s -A "Mozilla/5.0 Chrome/131.0"   "https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&display=swap"
+```
+
+Keep only the `/* latin */` and `/* latin-ext */` blocks.
 
 ## Before launch
 
 - [ ] Replace `data/seed.csv` with the owner's real export and re-run `npm run seed`
 - [ ] Set `metadataBase` in `src/app/layout.tsx` to the real domain (currently a placeholder)
-- [ ] Decide on the tile host
+- [ ] Add a CARTO API key, or accept the Positron basemap and its performance cost
 - [ ] Add the Plausible or Umami script tag to `src/app/layout.tsx`
