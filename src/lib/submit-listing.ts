@@ -7,6 +7,12 @@ export type SubmitState = {
   message: string;
   /** Field name to focus, when one field is at fault. */
   field?: string;
+  /**
+   * What was submitted, echoed back so a rejected form can be refilled. React
+   * resets an uncontrolled form once the action resolves, and a broker who
+   * mistypes one digit should not lose the other fourteen fields.
+   */
+  values?: Record<string, string>;
 } | null;
 
 const text = (fd: FormData, key: string, max = 400): string | null => {
@@ -45,24 +51,42 @@ export async function submitListing(
     return { ok: true, message: "Thanks - we have your details and will be in touch." };
   }
 
+  // Everything the sender typed, minus the honeypot, ready to hand back with
+  // any rejection.
+  const values: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key !== "company_website" && typeof value === "string") values[key] = value;
+  }
+  const fail = (message: string, field: string): SubmitState => ({
+    ok: false,
+    message,
+    field,
+    values,
+  });
+
   const contact_name = text(formData, "contact_name", 120);
   const phoneRaw = text(formData, "contact_phone", 32);
   const cluster = text(formData, "cluster", 40);
   const property_type = text(formData, "property_type", 40);
 
-  if (!contact_name) return { ok: false, message: "Add your name so we know who to call.", field: "contact_name" };
-  if (!phoneRaw) return { ok: false, message: "Add a phone number - it is how we confirm the details.", field: "contact_phone" };
+  if (!contact_name) return fail("Add your name so we know who to call.", "contact_name");
+  if (!phoneRaw) {
+    return fail("Add a phone number - it is how we confirm the details.", "contact_phone");
+  }
 
   const contact_phone = normalisePhone(phoneRaw);
   if (!contact_phone) {
-    return { ok: false, message: "That does not look like a 10-digit Indian mobile number.", field: "contact_phone" };
+    return fail(
+      "That does not look like a 10-digit Indian mobile number.",
+      "contact_phone",
+    );
   }
 
   if (!cluster || !CLUSTERS.includes(cluster as (typeof CLUSTERS)[number])) {
-    return { ok: false, message: "Pick the cluster the property sits in.", field: "cluster" };
+    return fail("Pick the cluster the property sits in.", "cluster");
   }
   if (!property_type || !PROPERTY_TYPES.includes(property_type as (typeof PROPERTY_TYPES)[number])) {
-    return { ok: false, message: "Pick what kind of property this is.", field: "property_type" };
+    return fail("Pick what kind of property this is.", "property_type");
   }
 
   const flooring = text(formData, "flooring", 40);
@@ -105,6 +129,7 @@ export async function submitListing(
       ok: false,
       message:
         "Submissions are not connected yet, so this would go nowhere. Please call or WhatsApp us instead - we will add your property the same day.",
+      values,
     };
   }
 
@@ -118,6 +143,7 @@ export async function submitListing(
     return {
       ok: false,
       message: "Something broke on our side and your details were not saved. Please try again.",
+      values,
     };
   }
 

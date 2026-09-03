@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 import { submitListing, type SubmitState } from "@/lib/submit-listing";
 import { AVAILABILITY, CLUSTERS, FLOORING_TYPES, PROPERTY_TYPES } from "@/lib/types";
@@ -33,6 +33,34 @@ function Field({
  */
 export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitListing, null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  /*
+    A rejected submission has to survive. React clears an uncontrolled form once
+    the action resolves, so the values come back from the server and go straight
+    into the fields again, and the field actually at fault takes focus - which
+    is what SubmitState.field was always for.
+  */
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form || !state || state.ok) return;
+
+    for (const [name, value] of Object.entries(state.values ?? {})) {
+      const el = form.elements.namedItem(name);
+      if (el instanceof HTMLInputElement) {
+        if (el.type === "checkbox") el.checked = value === "on";
+        else el.value = value;
+      } else if (el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+        el.value = value;
+      }
+    }
+
+    const culprit = state.field ? form.elements.namedItem(state.field) : null;
+    if (culprit instanceof HTMLElement) {
+      culprit.focus();
+      culprit.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }, [state]);
 
   if (state?.ok) {
     return (
@@ -55,7 +83,7 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
   }
 
   return (
-    <form action={action} className="px-5 pb-5">
+    <form ref={formRef} action={action} className="px-5 pb-5">
       {/* Honeypot: hidden from people, irresistible to bots. */}
       <input
         type="text"
@@ -77,9 +105,12 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
           <input name="contact_name" required className="input" placeholder="Kiran Deshmukh" />
         </Field>
         <Field label="Phone">
+          {/* Ten characters is the shortest a real number can be written; the
+              6-9 rule stays on the server where the message is better. */}
           <input
             name="contact_phone"
             required
+            minLength={10}
             type="tel"
             inputMode="tel"
             className="input"
