@@ -5,6 +5,7 @@ import {
   effectiveMonthlyRent,
   effectiveRatePerSqft,
   fmtRupees,
+  isSampleListing,
   listingTitle,
   verifiedAgo,
 } from "@/lib/derive";
@@ -29,6 +30,38 @@ export function AvailabilityTag({ value }: { value: string }) {
     >
       {value}
     </span>
+  );
+}
+
+/**
+ * Scaffolding, marked wherever a listing is shown. Deliberately reads as a
+ * warning rather than a neutral tag: the risk is someone taking these numbers,
+ * or the phone number behind them, for real inventory.
+ */
+export function SampleTag() {
+  return (
+    <span
+      className="label whitespace-nowrap rounded-full bg-[rgba(222,74,95,0.12)] px-2 py-0.5 font-medium text-[#a8283c]"
+      title="Placeholder data, not a real property"
+    >
+      Sample
+    </span>
+  );
+}
+
+/**
+ * Shown where a set of listings is presented as inventory, and only while every
+ * one of them is scaffolding. Counts and map pins imply real availability on
+ * their own, which the per-card tag alone does not answer.
+ */
+export function SampleNotice({ listings }: { listings: Listing[] }) {
+  if (listings.length === 0 || !listings.every(isSampleListing)) return null;
+  return (
+    <p className="border-b border-line bg-[rgba(222,74,95,0.08)] px-3 py-2 text-sm">
+      <strong className="font-bold">Sample data.</strong> Every property here is a
+      placeholder while the site is being built. None is on offer and no number reaches
+      a broker.
+    </p>
   );
 }
 
@@ -80,7 +113,10 @@ export function ListingCard({ listing, active = false, onHover, onSelect }: Prop
           <span className="chip-dot" aria-hidden="true" />
           <span className="truncate">{listing.locality ?? listing.cluster}</span>
         </p>
-        <AvailabilityTag value={listing.availability} />
+        <span className="flex shrink-0 items-center gap-1">
+          {isSampleListing(listing) ? <SampleTag /> : null}
+          <AvailabilityTag value={listing.availability} />
+        </span>
       </div>
 
       <h3 className="mt-1 text-lg">

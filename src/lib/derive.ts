@@ -28,6 +28,15 @@ export function effectiveRatePerSqft(l: Listing): number | null {
 }
 
 /** True when the figure came from arithmetic rather than from the broker. */
+/**
+ * Scaffolding rows, not real inventory. They are written with the
+ * non-allocatable +91555 prefix precisely so they cannot reach a person, and
+ * that prefix is what marks them here - so the moment real listings with real
+ * numbers land, every "Sample" mark disappears on its own.
+ */
+export const isSampleListing = (l: Listing) =>
+  l.broker_phone?.startsWith("+91555") ?? false;
+
 export const rentIsDerived = (l: Listing) => l.quoted_monthly_rent === null;
 export const rateIsDerived = (l: Listing) => l.rate_per_sqft === null;
 

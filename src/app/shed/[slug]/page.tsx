@@ -19,6 +19,7 @@ import {
   fmtPower,
   fmtRupees,
   fmtText,
+  isSampleListing,
   listingTitle,
   rateIsDerived,
   rentIsDerived,
@@ -96,6 +97,7 @@ export default async function ShedPage({ params }: Params) {
 
   const rate = effectiveRatePerSqft(listing);
   const rent = effectiveMonthlyRent(listing);
+  const sample = isSampleListing(listing);
   const similar = similarListings(all, listing);
 
   // Machine-readable specs, so the numbers a portal buries in prose are structured here.
@@ -167,6 +169,19 @@ export default async function ShedPage({ params }: Params) {
               {verifiedAgo(listing.last_verified)}.
               {listing.notes ? ` ${listing.notes}.` : ""}
             </p>
+
+            {/*
+              Said before the call button, not after it: the number below is
+              unallocatable and the specs are invented, and this is the one
+              page where someone would act on either.
+            */}
+            {sample ? (
+              <p className="mt-4 max-w-[70ch] rounded-[10px] bg-[rgba(222,74,95,0.1)] px-3 py-2 text-sm">
+                <strong className="font-bold">Sample listing.</strong> This is placeholder
+                data used while the site is being built — the specs, the rent and the phone
+                number are not real, and no such property is on offer.
+              </p>
+            ) : null}
 
             {/*
               Closing a lease happens on the phone, not in a form, so the call
@@ -310,7 +325,9 @@ export default async function ShedPage({ params }: Params) {
       {listing.broker_phone ? (
         <div className="call-bar">
           <div>
-            <p className="label">{listing.broker_name ?? "Broker"}</p>
+            <p className="label">
+              {sample ? "Sample listing — number is not real" : (listing.broker_name ?? "Broker")}
+            </p>
             <p className="num text-sm">
               {rent === null ? "Rent on request" : `${fmtRupees(rent)} per month`}
             </p>

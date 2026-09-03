@@ -12,7 +12,7 @@ import { PAGE_SIZE, applyFilters, describeMiss } from "@/lib/query";
 import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
 
 import { FilterRail } from "./filter-rail";
-import { ListingCard } from "./listing-card";
+import { ListingCard, SampleNotice } from "./listing-card";
 
 const ListingMap = dynamic(() => import("./listing-map"), {
   ssr: false,
@@ -228,6 +228,10 @@ export function SearchShell({ all }: { all: Listing[] }) {
             {listOpen ? "Hide list" : "Show list"}
           </button>
         </div>
+
+        {/* Reads the whole set, not the filtered page: a count and a map full of
+            pins imply real inventory whatever the current filters show. */}
+        <SampleNotice listings={all} />
 
         {/* What the null contract cost, and the one control that reverses it. */}
         {!filters.loose && result.nullExclusions.length > 0 ? (

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ListingCard } from "@/components/listing-card";
+import { ListingCard, SampleNotice } from "@/components/listing-card";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListings } from "@/lib/data";
@@ -102,6 +102,12 @@ export default async function ClusterPage({ params }: Params) {
           {cluster}. The ranges below count only what brokers actually stated — nothing here is
           estimated.
         </p>
+
+        {/* The sentence above claims live availability, so the qualifier belongs
+            with it rather than further down beside the cards. */}
+        <div className="mt-3 max-w-[70ch] overflow-hidden rounded-[10px]">
+          <SampleNotice listings={rows} />
+        </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-[1fr_320px]">
           <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
