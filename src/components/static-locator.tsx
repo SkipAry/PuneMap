@@ -73,13 +73,35 @@ export function StaticLocator({
   const padLat = (Math.max(...lats) - Math.min(...lats)) * 0.08 || 0.02;
   const padLng = (Math.max(...lngs) - Math.min(...lngs)) * 0.08 || 0.02;
 
-  const minLat = Math.min(...lats) - padLat;
-  const maxLat = Math.max(...lats) + padLat;
-  const minLng = Math.min(...lngs) - padLng;
-  const maxLng = Math.max(...lngs) + padLng;
+  let minLat = Math.min(...lats) - padLat;
+  let maxLat = Math.max(...lats) + padLat;
+  let minLng = Math.min(...lngs) - padLng;
+  let maxLng = Math.max(...lngs) + padLng;
 
   const W = 600;
   const H = 360;
+
+  /*
+    Fit the bounds to the frame's own aspect before projecting. Mapping latitude
+    and longitude to the axes independently stretches one of them - Chakan sat
+    12x taller than it was wide - which both distorts where the plots lie and
+    makes a single scale bar untrue in every direction but one.
+  */
+  const KM_PER_LAT = 110.57;
+  const kmPerLng = 111.32 * Math.cos(rad((minLat + maxLat) / 2));
+  const wideKm = (maxLng - minLng) * kmPerLng;
+  const tallKm = (maxLat - minLat) * KM_PER_LAT;
+
+  if (wideKm / tallKm < W / H) {
+    const grow = ((tallKm * W) / H - wideKm) / kmPerLng / 2;
+    minLng -= grow;
+    maxLng += grow;
+  } else {
+    const grow = ((wideKm * H) / W - tallKm) / KM_PER_LAT / 2;
+    minLat -= grow;
+    maxLat += grow;
+  }
+
   const x = (lng: number) => ((lng - minLng) / (maxLng - minLng)) * W;
   const y = (lat: number) => H - ((lat - minLat) / (maxLat - minLat)) * H;
 
@@ -91,21 +113,31 @@ export function StaticLocator({
   const km = distanceKm(PUNE, here);
   const direction = compass(PUNE, here);
 
-  // Scale bar: km per horizontal unit, then the roundest bar that fits.
-  const kmPerUnit =
-    ((maxLng - minLng) * 111.32 * Math.cos(rad((minLat + maxLat) / 2))) / W;
+  // One scale for both axes now, so the roundest bar that fits is honest.
+  const kmPerUnit = ((maxLng - minLng) * kmPerLng) / W;
   const barKm = NICE_KM.filter((n) => n / kmPerUnit < W * 0.32).pop() ?? NICE_KM[0];
   const barUnits = barKm / kmPerUnit;
 
-  const place = listing.locality ?? listing.cluster;
+  /*
+    The cluster, not the locality: a locality runs to "Chakan MIDC Phase II,
+    near Courtyard Marriott" and SVG text does not wrap, so it was clipped by
+    the frame. The full locality is already set beside this figure, and the
+    cluster is the unit the whole map is colour-coded by.
+  */
+  const place = listing.cluster;
 
   return (
+    /*
+      "meet" rather than "slice" on the svg below: the projection is uniform
+      now, so cropping to fill would drop the Pune mark or the scale bar
+      depending on the shape of the box this figure is given.
+    */
     <figure className="card overflow-hidden" style={{ height }}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
         height="100%"
-        preserveAspectRatio="xMidYMid slice"
+        preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`Plot plan locating this ${listing.property_type.toLowerCase()} in ${place}, about ${Math.round(km)} kilometres ${direction} of Pune centre.`}
       >
