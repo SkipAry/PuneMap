@@ -69,6 +69,16 @@ export default function AboutPage() {
             Each listing carries the date it was last verified. Specs come from the broker or owner
             and are not independently measured — confirm on site before you sign.
           </p>
+
+          <h2 className="group-heading mt-4">Your details</h2>
+          <p>
+            Browsing the map collects nothing about you. If you send us a property we keep
+            your name and number to call you about it.{" "}
+            <Link href="/privacy" className="text-action underline">
+              What we collect and why
+            </Link>
+            .
+          </p>
         </div>
       </main>
     </>

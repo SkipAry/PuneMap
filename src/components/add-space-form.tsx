@@ -231,7 +231,18 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
         </p>
       ) : null}
 
-      <div className="mt-5 flex items-center justify-end gap-2 border-t border-line pt-4">
+      {/* Beside the button that sends it, which is the moment the reader is
+          deciding whether to hand over a phone number. */}
+      <p className="label mt-4 max-w-[60ch]">
+        We use your name and number to call you about this property, and publish them on
+        the listing only if you go ahead.{" "}
+        <a href="/privacy" className="underline">
+          What we collect
+        </a>
+        .
+      </p>
+
+      <div className="mt-4 flex items-center justify-end gap-2 border-t border-line pt-4">
         {onDone ? (
           <button type="button" className="btn-quiet" onClick={onDone}>
             Cancel

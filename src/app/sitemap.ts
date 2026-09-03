@@ -47,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: at("/") },
     { url: at("/about") },
     { url: at("/list-your-space") },
+    { url: at("/privacy") },
     ...clusters,
     ...listings.map((l) => ({
       url: at(`/shed/${l.slug}`),
