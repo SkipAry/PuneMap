@@ -97,6 +97,8 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const [hoverSlug, setHoverSlug] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
+  const [offscreen, setOffscreen] = useState(0);
+  const [fitToken, setFitToken] = useState(0);
 
   const selectFromMap = useCallback((slug: string) => {
     setActiveSlug(slug);
@@ -126,11 +128,30 @@ export function SearchShell({ all }: { all: Listing[] }) {
             hoverSlug={hoverSlug}
             basemap={basemap}
             onSelect={selectFromMap}
+            onOffscreenChange={setOffscreen}
+            fitToken={fitToken}
           />
         ) : (
           <div className="size-full bg-ground" />
         )}
       </div>
+
+      {/*
+        The map never moves itself. When a filter change leaves matches outside
+        the viewport, say so and offer the move rather than taking it.
+      */}
+      {offscreen > 0 && !filtersOpen ? (
+        <div className="map-nudge">
+          <button
+            type="button"
+            className="btn-action"
+            onClick={() => setFitToken((n) => n + 1)}
+          >
+            <span className="num">{fmtNumber(offscreen)}</span>{" "}
+            {offscreen === 1 ? "match" : "matches"} off screen — zoom to fit
+          </button>
+        </div>
+      ) : null}
 
       {/* Basemap switch, bottom-left, away from the result panel. */}
       <div className="panel absolute bottom-3 left-2 z-20 hidden p-1 sm:left-3 sm:block">
@@ -149,7 +170,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
       </div>
 
       {/* Zone chips: the legend and the cluster filter, one control. */}
-      <div className="absolute inset-x-0 bottom-3 z-20 hidden px-2 sm:px-3 panel:block">
+      <div className="zone-rail hidden panel:block">
         <div className="panel mx-auto flex w-fit max-w-full items-center gap-1.5 overflow-x-auto p-1.5 scrollbar-slim">
           {CLUSTERS.map((c) => (
             <button

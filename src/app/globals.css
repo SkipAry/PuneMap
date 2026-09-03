@@ -41,6 +41,13 @@
 }
 
 :root {
+  /*
+    How much of the map's right edge the docked result panel occupies. Zero
+    while the panel is still a bottom sheet. Both the panel and the zone rail
+    read this, so the rail can never slide underneath the panel.
+  */
+  --dock-w: 0px;
+
   /* Sign panels: translucent white over the territory, never opaque. */
   --panel: rgba(255, 255, 255, 0.94);
   --panel-blur: blur(14px) saturate(1.4);
@@ -344,13 +351,17 @@
 }
 
 @media (min-width: 820px) {
+  :root {
+    --dock-w: 340px;
+  }
+
   .results-dock,
   .results-dock[data-open="false"],
   .results-dock[data-open="true"] {
     left: auto;
     right: 0.75rem;
     top: calc(var(--topbar-h) + 1.25rem);
-    width: 340px;
+    width: var(--dock-w);
     max-height: none;
   }
 }
@@ -358,10 +369,74 @@
 @media (min-width: 1024px) {
   /* Same selector list as the 820px block, so specificity matches and this
      wider value actually wins. */
-  .results-dock,
-  .results-dock[data-open="false"],
-  .results-dock[data-open="true"] {
-    width: 390px;
+  :root {
+    --dock-w: 390px;
+  }
+}
+
+/*
+  The zone rail sits over the map only, never under the docked panel. Centring
+  it against the full viewport put Pirangut and Other behind the panel at every
+  width the rail is visible, where a click landed on a result card instead.
+*/
+.zone-rail {
+  position: absolute;
+  left: 0.75rem;
+  right: calc(var(--dock-w) + 1.5rem);
+  bottom: 0.75rem;
+  z-index: 20;
+}
+
+/*
+  The phone call is the conversion, and on a phone it would otherwise sit below
+  the whole specification. The bar holds it; main gets matching bottom padding
+  so the last section is never trapped underneath.
+*/
+.call-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem calc(0.625rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-line);
+  background: var(--panel);
+  backdrop-filter: var(--panel-blur);
+}
+
+/*
+  Hidden from md up in CSS, not with a utility: .call-bar is unlayered and would
+  win over Tailwind's layered md:hidden, leaving the bar on desktop.
+*/
+@media (min-width: 768px) {
+  .call-bar {
+    display: none;
+  }
+}
+
+/* Sits over the map only, clear of the bottom sheet and above the zone rail. */
+.map-nudge {
+  position: absolute;
+  left: 0.75rem;
+  right: calc(var(--dock-w) + 1.5rem);
+  bottom: 5rem;
+  z-index: 21;
+  display: flex;
+  justify-content: center;
+  /* The strip is a full-width flexbox; only the button should catch the map. */
+  pointer-events: none;
+}
+
+.map-nudge > button {
+  pointer-events: auto;
+}
+
+@media (min-width: 820px) {
+  .map-nudge {
+    bottom: 4.25rem;
   }
 }
 

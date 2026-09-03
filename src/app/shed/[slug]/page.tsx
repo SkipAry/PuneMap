@@ -135,7 +135,8 @@ export default async function ShedPage({ params }: Params) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-6">
+      {/* pb-28 clears the fixed call bar so the last section is never trapped. */}
+      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
         <p className="label mb-3">
           <Link href="/" className="hover:text-ink">
             Search
@@ -166,6 +167,20 @@ export default async function ShedPage({ params }: Params) {
               {verifiedAgo(listing.last_verified)}.
               {listing.notes ? ` ${listing.notes}.` : ""}
             </p>
+
+            {/*
+              Closing a lease happens on the phone, not in a form, so the call
+              is the page's primary action and sits with the headline rather
+              than four sections down beside the attribution.
+            */}
+            {listing.broker_phone ? (
+              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <a href={`tel:${listing.broker_phone}`} className="btn-action">
+                  Call {listing.broker_name ?? "the broker"}
+                </a>
+                <span className="num text-sm text-muted">{listing.broker_phone}</span>
+              </div>
+            ) : null}
           </div>
           <StaticLocator listing={listing} context={all} />
         </section>
@@ -286,6 +301,25 @@ export default async function ShedPage({ params }: Params) {
           </section>
         ) : null}
       </main>
+
+      {/*
+        On a phone the call sits below several screens of specification, so it
+        is repeated in a bar that stays put. Desktop keeps the headline action
+        in view without one.
+      */}
+      {listing.broker_phone ? (
+        <div className="call-bar">
+          <div>
+            <p className="label">{listing.broker_name ?? "Broker"}</p>
+            <p className="num text-sm">
+              {rent === null ? "Rent on request" : `${fmtRupees(rent)} per month`}
+            </p>
+          </div>
+          <a href={`tel:${listing.broker_phone}`} className="btn-action !min-h-11 px-5">
+            Call
+          </a>
+        </div>
+      ) : null}
     </>
   );
 }

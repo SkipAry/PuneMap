@@ -75,7 +75,10 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
   const active = activeFilterCount(filters);
 
   return (
-    <div className="flex h-full flex-col">
+    // flex-1 rather than h-full: as a flex child under the sheet's own header,
+    // h-full resolved to the whole sheet and pushed the footer - the count and
+    // Clear all - below the viewport on phones, where overflow-hidden ate it.
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <Group title="Building specs">
           <div>

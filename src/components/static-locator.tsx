@@ -5,7 +5,41 @@ import type { Listing } from "@/lib/types";
  * A locator diagram, not an interactive map: nearby listings as zone-coloured
  * ticks, this one called out. Inline SVG, so the page needs no tile service, no
  * key and no client JavaScript.
+ *
+ * It carries no basemap, so it has to label its own geography: the plot is read
+ * against Pune, a scale bar and the locality name. Decimal degrees are not a
+ * location to anyone sourcing a shed.
  */
+
+/** Pune city centre, the one reference every reader of this page shares. */
+const PUNE: { lng: number; lat: number } = { lng: 73.8567, lat: 18.5204 };
+
+const EARTH_KM = 6371;
+const rad = (d: number) => (d * Math.PI) / 180;
+
+function distanceKm(a: typeof PUNE, b: typeof PUNE) {
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_KM * Math.asin(Math.sqrt(h));
+}
+
+const POINTS = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
+
+function compass(from: typeof PUNE, to: typeof PUNE) {
+  const y = Math.sin(rad(to.lng - from.lng)) * Math.cos(rad(to.lat));
+  const x =
+    Math.cos(rad(from.lat)) * Math.sin(rad(to.lat)) -
+    Math.sin(rad(from.lat)) * Math.cos(rad(to.lat)) * Math.cos(rad(to.lng - from.lng));
+  const deg = (Math.atan2(y, x) * 180) / Math.PI;
+  return POINTS[Math.round(((deg + 360) % 360) / 45) % 8];
+}
+
+/** The longest round distance that still fits comfortably inside the frame. */
+const NICE_KM = [1, 2, 5, 10, 20, 50];
+
 export function StaticLocator({
   listing,
   context,
@@ -30,8 +64,12 @@ export function StaticLocator({
     );
   }
 
-  const lats = [...points.map((p) => p.lat as number), listing.lat];
-  const lngs = [...points.map((p) => p.lng as number), listing.lng];
+  const here = { lng: listing.lng, lat: listing.lat };
+
+  // Pune is part of the frame, not just the plot: the reference has to be on
+  // screen for the crosshair to mean anything.
+  const lats = [...points.map((p) => p.lat as number), listing.lat, PUNE.lat];
+  const lngs = [...points.map((p) => p.lng as number), listing.lng, PUNE.lng];
   const padLat = (Math.max(...lats) - Math.min(...lats)) * 0.08 || 0.02;
   const padLng = (Math.max(...lngs) - Math.min(...lngs)) * 0.08 || 0.02;
 
@@ -45,8 +83,21 @@ export function StaticLocator({
   const x = (lng: number) => ((lng - minLng) / (maxLng - minLng)) * W;
   const y = (lat: number) => H - ((lat - minLat) / (maxLat - minLat)) * H;
 
-  const cx = x(listing.lng);
-  const cy = y(listing.lat);
+  const cx = x(here.lng);
+  const cy = y(here.lat);
+  const px = x(PUNE.lng);
+  const py = y(PUNE.lat);
+
+  const km = distanceKm(PUNE, here);
+  const direction = compass(PUNE, here);
+
+  // Scale bar: km per horizontal unit, then the roundest bar that fits.
+  const kmPerUnit =
+    ((maxLng - minLng) * 111.32 * Math.cos(rad((minLat + maxLat) / 2))) / W;
+  const barKm = NICE_KM.filter((n) => n / kmPerUnit < W * 0.32).pop() ?? NICE_KM[0];
+  const barUnits = barKm / kmPerUnit;
+
+  const place = listing.locality ?? listing.cluster;
 
   return (
     <figure className="card overflow-hidden" style={{ height }}>
@@ -56,7 +107,7 @@ export function StaticLocator({
         height="100%"
         preserveAspectRatio="xMidYMid slice"
         role="img"
-        aria-label={`Plot plan locating this ${listing.property_type.toLowerCase()} in ${listing.cluster} relative to other listings around Pune`}
+        aria-label={`Plot plan locating this ${listing.property_type.toLowerCase()} in ${place}, about ${Math.round(km)} kilometres ${direction} of Pune centre.`}
       >
         {/* Grid: the drawing's setting-out lines. */}
         <g stroke="var(--color-line)" strokeWidth="1">
@@ -75,11 +126,26 @@ export function StaticLocator({
               key={p.slug}
               cx={x(p.lng as number)}
               cy={y(p.lat as number)}
-              r="3"
+              r="4"
               fill={zoneOf(p.cluster)}
-              opacity="0.45"
+              opacity="0.6"
             />
           ))}
+
+        {/* Pune, the shared reference the reader already holds. */}
+        <g>
+          <circle cx={px} cy={py} r="5" fill="none" stroke="var(--color-muted)" strokeWidth="2" />
+          <circle cx={px} cy={py} r="1.5" fill="var(--color-muted)" />
+          <text
+            x={px + 10}
+            y={py + 5}
+            fill="var(--color-muted)"
+            fontSize="14"
+            fontWeight="600"
+          >
+            Pune
+          </text>
+        </g>
 
         {/* This listing: full-width cross-hair, the way a plot is called out. */}
         <g stroke="var(--color-action)" strokeWidth="1.5">
@@ -93,17 +159,60 @@ export function StaticLocator({
           the callout is clamped well inside the frame rather than positioned
           purely relative to the plot.
         */}
-        <text
-          x={Math.min(Math.max(cx + 12, 14), W - 190)}
-          y={Math.min(Math.max(cy < 70 ? cy + 32 : cy - 14, 52), H - 28)}
-          fill="var(--color-ink)"
-          fontSize="14"
-          fontWeight="600"
-          style={{ fontVariantNumeric: "tabular-nums" }}
+        <g
+          transform={`translate(${Math.min(Math.max(cx + 12, 14), W - 230)} ${Math.min(
+            Math.max(cy < 70 ? cy + 32 : cy - 26, 52),
+            H - 58,
+          )})`}
         >
-          {listing.lat.toFixed(4)}, {listing.lng.toFixed(4)}
-        </text>
+          <text fill="var(--color-ink)" fontSize="15" fontWeight="600">
+            {place}
+          </text>
+          {/* The number a reader can actually act on, in place of coordinates. */}
+          <text
+            y="17"
+            fill="var(--color-muted)"
+            fontSize="13"
+            fontWeight="500"
+            style={{ fontVariantNumeric: "tabular-nums" }}
+          >
+            {Math.round(km)} km {direction} of Pune
+          </text>
+        </g>
+
+        {/*
+          Scale bar: without it the grid states no distance at all. Held 40
+          units off the foot because "slice" crops the viewBox vertically on
+          the wider figure a phone gives it.
+        */}
+        <g transform={`translate(16 ${H - 40})`}>
+          <line x1={0} y1={0} x2={barUnits} y2={0} stroke="var(--color-ink)" strokeWidth="2" />
+          <line x1={0} y1={-4} x2={0} y2={4} stroke="var(--color-ink)" strokeWidth="2" />
+          <line
+            x1={barUnits}
+            y1={-4}
+            x2={barUnits}
+            y2={4}
+            stroke="var(--color-ink)"
+            strokeWidth="2"
+          />
+          <text
+            x={barUnits + 8}
+            y={5}
+            fill="var(--color-ink)"
+            fontSize="13"
+            fontWeight="600"
+            style={{ fontVariantNumeric: "tabular-nums" }}
+          >
+            {barKm} km
+          </text>
+        </g>
       </svg>
+
+      <figcaption className="sr-only">
+        {place}, about {Math.round(km)} km {direction} of Pune centre, calculated from the
+        listing coordinates.
+      </figcaption>
     </figure>
   );
 }
