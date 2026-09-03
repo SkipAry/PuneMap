@@ -417,28 +417,6 @@
   }
 }
 
-/* Sits over the map only, clear of the bottom sheet and above the zone rail. */
-.map-nudge {
-  position: absolute;
-  left: 0.75rem;
-  right: calc(var(--dock-w) + 1.5rem);
-  bottom: 5rem;
-  z-index: 21;
-  display: flex;
-  justify-content: center;
-  /* The strip is a full-width flexbox; only the button should catch the map. */
-  pointer-events: none;
-}
-
-.map-nudge > button {
-  pointer-events: auto;
-}
-
-@media (min-width: 820px) {
-  .map-nudge {
-    bottom: 4.25rem;
-  }
-}
 
 /*
   The one orchestrated moment: cards that stop matching fade, then the list

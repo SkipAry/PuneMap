@@ -168,6 +168,17 @@ export function DualRange({
           onChange(low, clean(floored, false));
         }}
       />
+
+      {/*
+        The ends of the track, stated. Height, crane and power each carry chips
+        that give the domain away; these three do not, so without this a reader
+        cannot tell whether the track runs to 40,000 sq ft or 400,000 until they
+        drag it.
+      */}
+      <div className="mt-1 flex justify-between" aria-hidden="true">
+        <span className="label num">{format(min)}</span>
+        <span className="label num">{format(max)}</span>
+      </div>
     </div>
   );
 }

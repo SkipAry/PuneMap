@@ -96,20 +96,6 @@ type Props = {
   hoverSlug: string | null;
   basemap: BasemapId;
   onSelect: (slug: string) => void;
-  /** How many matches currently sit outside the viewport, after every move. */
-  onOffscreenChange?: (count: number) => void;
-  /** Incremented by the parent to request one fit. Never fits on its own. */
-  fitToken?: number;
-};
-
-const plotted = (items: Listing[]) =>
-  items.filter((l) => l.lat !== null && l.lng !== null);
-
-const countOffscreen = (instance: MapLibreMap, items: Listing[]) => {
-  const bounds = instance.getBounds();
-  return plotted(items).filter(
-    (l) => !bounds.contains([l.lng as number, l.lat as number]),
-  ).length;
 };
 
 export default function ListingMap({
@@ -118,16 +104,12 @@ export default function ListingMap({
   hoverSlug,
   basemap,
   onSelect,
-  onOffscreenChange,
-  fitToken = 0,
 }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MapLibreMap | null>(null);
   const ready = useRef(false);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
-  const onOffscreenRef = useRef(onOffscreenChange);
-  onOffscreenRef.current = onOffscreenChange;
   const listingsRef = useRef(listings);
   listingsRef.current = listings;
 
@@ -271,13 +253,6 @@ export default function ListingMap({
     instance.on("load", () => {
       addLayers(instance);
       ready.current = true;
-      onOffscreenRef.current?.(countOffscreen(instance, listingsRef.current));
-    });
-
-    instance.on("moveend", () => {
-      if (ready.current) {
-        onOffscreenRef.current?.(countOffscreen(instance, listingsRef.current));
-      }
     });
 
     // A style swap wipes custom sources, so they are re-added each time.
@@ -302,43 +277,11 @@ export default function ListingMap({
   }, [basemap]);
 
   // No auto-fly and no fitBounds: the viewport stays where the user put it.
-  // Changing the filters can therefore leave matches off screen, so the count
-  // is reported and the parent offers a fit the user chooses to take.
   useEffect(() => {
     const instance = map.current;
     if (!instance || !ready.current) return;
     (instance.getSource("listings") as GeoJSONSource | undefined)?.setData(toGeoJson(listings));
-    onOffscreenRef.current?.(countOffscreen(instance, listings));
   }, [listings]);
-
-  /** Only ever runs on an explicit request from the parent. */
-  useEffect(() => {
-    const instance = map.current;
-    if (!instance || !ready.current || fitToken === 0) return;
-
-    const points = plotted(listings);
-    if (points.length === 0) return;
-
-    const bounds = new maplibregl.LngLatBounds();
-    for (const l of points) bounds.extend([l.lng as number, l.lat as number]);
-
-    // The docked panel covers the map's right edge; read its width from the
-    // same custom property the panel itself is sized by.
-    const dock =
-      parseInt(
-        getComputedStyle(document.documentElement).getPropertyValue("--dock-w"),
-        10,
-      ) || 0;
-
-    instance.fitBounds(bounds, {
-      padding: { top: 80, bottom: 80, left: 48, right: dock + 48 },
-      // A single match must not slam to street level.
-      maxZoom: 12.5,
-      duration: 400,
-    });
-    // listings is intentionally not a dependency: this fits only when asked.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitToken]);
 
   useEffect(() => {
     const instance = map.current;

@@ -27,6 +27,9 @@ import { CheckboxList, Chip, ChipRow, DualRange, MinRange, Toggle } from "./filt
 const areaScale = (n: number) => Math.round(Math.log(n) * 100);
 const areaUnscale = (s: number) => Math.round(Math.exp(s / 100) / 100) * 100;
 
+/** The sizes managers actually ask for, in sq ft. */
+const AREA_CHIPS = [25_000, 50_000, 100_000];
+
 const CRANE_CHIPS: { label: string; value: CraneFilter | null }[] = [
   { label: "Any", value: null },
   { label: "Provision only", value: "provision" },
@@ -122,6 +125,11 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
                 />
               ))}
             </ChipRow>
+            {/* The one meaningful zero in the data, and not guessable from the
+                chip alone. */}
+            <p className="label mt-1.5">
+              Provision only means the gantry provision is cast but no crane is fitted.
+            </p>
           </div>
 
           <div>
@@ -182,17 +190,33 @@ export function FilterRail({ filters, patch, clearAll, shown, total }: Props) {
         </Group>
 
         <Group title="Size">
-          <DualRange
-            label="Total built-up"
-            low={filters.minArea}
-            high={filters.maxArea}
-            min={AREA_MIN}
-            max={AREA_MAX}
-            format={(n) => `${fmtNumber(n)}`}
-            scale={areaScale}
-            unscale={areaUnscale}
-            onChange={(lo, hi) => patch({ minArea: lo, maxArea: hi }, "replace")}
-          />
+          <div>
+            <DualRange
+              label="Total built-up"
+              low={filters.minArea}
+              high={filters.maxArea}
+              min={AREA_MIN}
+              max={AREA_MAX}
+              format={(n) => `${fmtNumber(n)}`}
+              scale={areaScale}
+              unscale={areaUnscale}
+              onChange={(lo, hi) => patch({ minArea: lo, maxArea: hi }, "replace")}
+            />
+            {/* Area is the requirement a manager usually arrives holding, so it
+                gets the same one-tap shortcuts the spec rows have. */}
+            <div className="mt-1.5">
+              <ChipRow>
+                {AREA_CHIPS.map((a) => (
+                  <Chip
+                    key={a}
+                    label={`${fmtNumber(a)}+`}
+                    pressed={filters.minArea === a}
+                    onClick={() => patch({ minArea: filters.minArea === a ? null : a })}
+                  />
+                ))}
+              </ChipRow>
+            </div>
+          </div>
         </Group>
 
         <Group title="Commercials">
