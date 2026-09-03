@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SiteHeader } from "@/components/site-header";
+import { addressed } from "@/lib/site-url";
 import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterSlug } from "@/lib/types";
 
@@ -8,7 +9,7 @@ export const metadata = {
   title: "About — Pune Industrial Space",
   description:
     "What this is, who runs it, and how to list an industrial shed or warehouse around Pune free of charge.",
-  alternates: { canonical: "/about" },
+  ...addressed("/about"),
 };
 
 export default function AboutPage() {

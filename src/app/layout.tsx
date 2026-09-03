@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { IS_PRODUCTION_SITE, SITE_URL } from "@/lib/site-url";
+import { addressed, IS_PRODUCTION_SITE, SITE_URL } from "@/lib/site-url";
 
 import "./globals.css";
 
@@ -13,9 +13,7 @@ export const metadata: Metadata = {
   description:
     "Filter industrial sheds, warehouses and factory buildings around Pune by clear height, crane capacity, sanctioned power, flooring and docks.",
   // The home page had no canonical at all; the inner pages set their own.
-  alternates: { canonical: "/" },
-  // Resolved against metadataBase, so og:url tracks the same host as canonical.
-  openGraph: { type: "website", locale: "en_IN", url: "/" },
+  ...addressed("/"),
   // A preview deployment is a copy of the site. Keeping it out of the index is
   // the other half of not letting it claim the production URL.
   robots: IS_PRODUCTION_SITE ? undefined : { index: false, follow: false },

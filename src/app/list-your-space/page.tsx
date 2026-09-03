@@ -1,11 +1,12 @@
 import { AddSpaceForm } from "@/components/add-space-form";
 import { SiteHeader } from "@/components/site-header";
+import { addressed } from "@/lib/site-url";
 
 export const metadata = {
   title: "List your industrial property in Pune — free, no listing fee",
   description:
     "Brokers and owners: add a shed, warehouse or factory building around Pune to the map free of charge. Fill in what you know — every spec is optional — and we verify before listing.",
-  alternates: { canonical: "/list-your-space" },
+  ...addressed("/list-your-space"),
 };
 
 /**

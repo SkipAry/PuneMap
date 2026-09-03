@@ -26,6 +26,7 @@ import {
   verifiedAgo,
 } from "@/lib/derive";
 import { similarListings } from "@/lib/query";
+import { addressed } from "@/lib/site-url";
 import { zoneOf } from "@/lib/clusters";
 import { clusterSlug, type Listing } from "@/lib/types";
 
@@ -80,8 +81,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `/shed/${l.slug}` },
-    openGraph: { title, description, type: "article" },
+    ...addressed(`/shed/${l.slug}`, { title, description, type: "article" }),
   };
 }
 

@@ -32,3 +32,27 @@ export const SITE_URL = candidate ? withScheme(candidate) : "http://localhost:30
 
 /** True only for the real production site, so previews can be kept out of search. */
 export const IS_PRODUCTION_SITE = process.env.VERCEL_ENV === "production";
+
+/**
+ * Canonical and og:url for one page, from one path.
+ *
+ * Next replaces `openGraph` wholesale when a child route declares its own
+ * rather than merging it, which had left the cluster and shed pages with no
+ * og:url or og:locale at all, and the pages that declared none quietly
+ * inheriting the home page's og:url as their own. Building both from the same
+ * argument is what stops the two from drifting apart again.
+ */
+export function addressed(
+  path: string,
+  og: { title?: string; description?: string; type?: "website" | "article" } = {},
+) {
+  return {
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website" as const,
+      locale: "en_IN",
+      url: path,
+      ...og,
+    },
+  };
+}

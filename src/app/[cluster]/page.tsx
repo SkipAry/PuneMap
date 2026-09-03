@@ -6,6 +6,7 @@ import { ListingCard, SampleNotice } from "@/components/listing-card";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListings } from "@/lib/data";
+import { addressed } from "@/lib/site-url";
 import { fmtArea, fmtNumber } from "@/lib/derive";
 import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterFromSlug, clusterSlug, type Listing } from "@/lib/types";
@@ -41,8 +42,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `/${slug}` },
-    openGraph: { title, description },
+    ...addressed(`/${slug}`, { title, description }),
   };
 }
 
