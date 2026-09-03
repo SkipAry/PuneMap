@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Analytics } from "@/components/analytics";
 import { addressed, IS_PRODUCTION_SITE, SITE_URL } from "@/lib/site-url";
 
 import "./globals.css";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         {children}
+        <Analytics />
       </body>
     </html>
   );
