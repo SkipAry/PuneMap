@@ -406,6 +406,19 @@
     border-right: 1px solid var(--color-line);
   }
 
+  /* A reading page has no third pane, so the column keeps its own measure
+     rather than stretching a paragraph across the whole window. */
+  .shell--reading {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  }
+
+  .shell--reading .detail-col {
+    max-width: 46rem;
+    /* Centred in its track: held to a measure but left-aligned, the page reads
+       as a column with a hole beside it rather than as a page. */
+    margin-inline: auto;
+  }
+
   .detail-map {
     position: relative;
     background: var(--color-ground);

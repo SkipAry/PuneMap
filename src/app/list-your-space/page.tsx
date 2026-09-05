@@ -1,5 +1,7 @@
 import { AddSpaceForm } from "@/components/add-space-form";
+import { SearchRail } from "@/components/search-rail";
 import { SiteHeader } from "@/components/site-header";
+import { railCounts } from "@/lib/rail-counts";
 import { addressed } from "@/lib/site-url";
 
 export const metadata = {
@@ -13,11 +15,23 @@ export const metadata = {
  * The same form the nav dialog renders, as a page. It is the no-JavaScript
  * fallback for that dialog and a landing page in its own right.
  */
-export default function ListYourSpacePage() {
+export default async function ListYourSpacePage() {
+  const clusterCounts = await railCounts();
+
   return (
     <>
-      <SiteHeader subtitle="List your space" />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8">
+      <div className="panel:hidden">
+        <SiteHeader subtitle="List your space" />
+      </div>
+
+      <div className="shell shell--reading panel:fixed panel:inset-0 panel:overflow-hidden">
+        <SearchRail active="list" counts={clusterCounts} />
+
+        <main
+          id="main"
+          tabIndex={-1}
+          className="detail-col mx-auto max-w-3xl px-4 py-8 panel:px-8 panel:py-10"
+        >
         <h1 className="text-3xl">List your space, free</h1>
         <p className="mt-3 max-w-[62ch] text-base text-muted">
           There is no listing fee and no account to create. We are paid brokerage by the
@@ -41,7 +55,8 @@ export default function ListYourSpacePage() {
         <div className="panel mt-6 !bg-white pt-5">
           <AddSpaceForm />
         </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 }

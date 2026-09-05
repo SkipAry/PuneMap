@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ListingCard, SampleNotice } from "@/components/listing-card";
+import { SearchRail } from "@/components/search-rail";
+import { railCounts } from "@/lib/rail-counts";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListings } from "@/lib/data";
@@ -55,6 +57,8 @@ export default async function ClusterPage({ params }: Params) {
   const rows = all.filter((l) => l.cluster === cluster && l.availability !== "Leased out");
   if (rows.length === 0) notFound();
 
+  const clusterCounts = await railCounts();
+
   const height = statedRange(rows, (l) => l.height_m);
   const crane = statedRange(rows, (l) => l.crane_capacity_ton);
   const power = statedRange(rows, (l) => l.power_hp);
@@ -85,9 +89,19 @@ export default async function ClusterPage({ params }: Params) {
 
   return (
     <>
-      <SiteHeader subtitle={`${cluster} · ${rows.length} available`} />
+      {/* Phone only: from 820px the rail carries identity and navigation. */}
+      <div className="panel:hidden">
+        <SiteHeader subtitle={`${cluster} · ${rows.length} available`} />
+      </div>
 
-      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-6">
+      <div className="shell shell--detail panel:fixed panel:inset-0 panel:overflow-hidden">
+        <SearchRail counts={clusterCounts} />
+
+        <main
+          id="main"
+          tabIndex={-1}
+          className="detail-col mx-auto max-w-5xl px-4 py-6 panel:mx-0 panel:max-w-none panel:px-5"
+        >
         <p className="label flex items-center gap-2">
           <span
             className="chip-dot"
@@ -109,18 +123,20 @@ export default async function ClusterPage({ params }: Params) {
           <SampleNotice listings={rows} />
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-[1fr_320px]">
-          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {facts.map((f) => (
-              <div key={f.label} className="card px-3 py-2.5">
-                <dd className="num text-lg">{f.value}</dd>
-                <dt className="label mt-1">
-                  {f.label}
-                  <span className="block">{f.note}</span>
-                </dt>
-              </div>
-            ))}
-          </dl>
+        <dl className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {facts.map((f) => (
+            <div key={f.label} className="card px-3 py-2.5">
+              <dd className="num text-lg">{f.value}</dd>
+              <dt className="label mt-1">
+                {f.label}
+                <span className="block">{f.note}</span>
+              </dt>
+            </div>
+          ))}
+        </dl>
+
+        {/* Phone keeps the locator inline; wider, it becomes the third pane. */}
+        <div className="mt-4 panel:hidden">
           <StaticLocator listing={rows[0]} context={rows} height={160} />
         </div>
 
@@ -139,7 +155,9 @@ export default async function ClusterPage({ params }: Params) {
           </div>
         </section>
 
-        <section className="mt-8">
+        {/* Phone only: the rail carries every cluster from 820px, so repeating
+            them here would be the same list twice on one screen. */}
+        <section className="mt-8 panel:hidden">
           <h2 className="group-heading">Other clusters</h2>
           <div className="flex flex-wrap gap-1.5">
             {CLUSTERS.filter((c) => c !== cluster).map((c) => (
@@ -155,7 +173,12 @@ export default async function ClusterPage({ params }: Params) {
             ))}
           </div>
         </section>
-      </main>
+        </main>
+
+        <div className="detail-map hidden panel:block">
+          <StaticLocator listing={rows[0]} context={rows} height="100%" />
+        </div>
+      </div>
     </>
   );
 }

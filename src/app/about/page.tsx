@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { SearchRail } from "@/components/search-rail";
 import { SiteHeader } from "@/components/site-header";
+import { railCounts } from "@/lib/rail-counts";
 import { addressed } from "@/lib/site-url";
 import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterSlug } from "@/lib/types";
@@ -12,11 +14,28 @@ export const metadata = {
   ...addressed("/about"),
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const clusterCounts = await railCounts();
+
   return (
     <>
-      <SiteHeader subtitle="About" />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8">
+      {/* Phone only: from 820px the rail carries identity and navigation. */}
+      <div className="panel:hidden">
+        <SiteHeader subtitle="About" />
+      </div>
+
+      {/*
+        Two panes, not three: there is no map to hold a third. The reading
+        column keeps its own measure rather than stretching to the window.
+      */}
+      <div className="shell shell--reading panel:fixed panel:inset-0 panel:overflow-hidden">
+        <SearchRail active="about" counts={clusterCounts} />
+
+        <main
+          id="main"
+          tabIndex={-1}
+          className="detail-col mx-auto max-w-3xl px-4 py-8 panel:px-8 panel:py-10"
+        >
         <h1 className="text-3xl">About this site</h1>
 
         <div className="mt-4 flex max-w-[70ch] flex-col gap-4 text-base">
@@ -80,7 +99,8 @@ export default function AboutPage() {
             .
           </p>
         </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AvailabilityTag, ListingCard } from "@/components/listing-card";
 import { SearchRail } from "@/components/search-rail";
+import { railCounts } from "@/lib/rail-counts";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListingBySlug, getListings } from "@/lib/data";
@@ -100,13 +101,7 @@ export default async function ShedPage({ params }: Params) {
   const rent = effectiveMonthlyRent(listing);
   const sample = isSampleListing(listing);
 
-  /* Rail counts mirror the cluster pages: what is actually on offer. */
-  const clusterCounts: Record<string, number> = {};
-  for (const l of all) {
-    if (l.availability !== "Leased out") {
-      clusterCounts[l.cluster] = (clusterCounts[l.cluster] ?? 0) + 1;
-    }
-  }
+  const clusterCounts = await railCounts();
   const similar = similarListings(all, listing);
 
   // Machine-readable specs, so the numbers a portal buries in prose are structured here.
