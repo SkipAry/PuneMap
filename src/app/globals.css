@@ -392,6 +392,32 @@
 }
 
 /*
+  A listing reads in the same three panes, with a wider middle: a spec table
+  needs more measure than a result row, and the locator holds the third pane so
+  the page still renders with no JavaScript.
+*/
+@media (min-width: 820px) {
+  .shell--detail {
+    grid-template-columns: var(--rail-w) minmax(420px, 30rem) 1fr;
+  }
+
+  .detail-col {
+    overflow-y: auto;
+    border-right: 1px solid var(--color-line);
+  }
+
+  .detail-map {
+    position: relative;
+    background: var(--color-ground);
+    padding: 1.25rem;
+  }
+
+  .detail-map > figure {
+    height: 100%;
+  }
+}
+
+/*
   The navigation rail. Clusters live here permanently rather than as chips
   floating over the map: as chips they could be covered by the result panel,
   and two of the nine regularly were.
