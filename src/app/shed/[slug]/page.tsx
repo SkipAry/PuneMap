@@ -154,7 +154,7 @@ export default async function ShedPage({ params }: Params) {
           className="detail-col mx-auto max-w-5xl px-4 pb-28 pt-6 panel:mx-0 panel:max-w-none panel:px-5 panel:pb-8"
         >
         <p className="label mb-3">
-          <Link href="/" className="hover:text-ink">
+          <Link href="/search" className="hover:text-ink">
             Search
           </Link>
           {" / "}

@@ -45,6 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: at("/") },
+    { url: at("/search") },
     { url: at("/about") },
     { url: at("/list-your-space") },
     { url: at("/privacy") },

@@ -90,7 +90,7 @@ export function SearchRail({
             Search
           </span>
         ) : (
-          <Link className="rail-link" href="/">
+          <Link className="rail-link" href="/search">
             <Icon name="search" />
             Search
           </Link>

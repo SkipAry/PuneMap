@@ -23,7 +23,7 @@ export default function NotFound() {
           </p>
 
           <p>
-            <Link href="/" className="btn-action">
+            <Link href="/search" className="btn-action">
               Back to the map
             </Link>
           </p>

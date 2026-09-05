@@ -141,7 +141,7 @@ export default async function ClusterPage({ params }: Params) {
         </div>
 
         <p className="mt-5">
-          <Link href={`/?cluster=${slug}`} className="btn-action">
+          <Link href={`/search?cluster=${slug}`} className="btn-action">
             Filter these {rows.length} listings by height, crane and power →
           </Link>
         </p>
