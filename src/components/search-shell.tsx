@@ -13,6 +13,7 @@ import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
 
 import { FilterRail } from "./filter-rail";
 import { ListingCard, SampleNotice } from "./listing-card";
+import { SearchRail } from "./search-rail";
 
 const ListingMap = dynamic(() => import("./listing-map"), {
   ssr: false,
@@ -108,6 +109,43 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const visible = displayed.slice(0, limit);
   const activeCount = activeFilterCount(filters);
 
+  /* Counts are of what is actually on offer, matching the cluster pages. */
+  const clusterCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const l of all) {
+      if (l.availability === "Leased out") continue;
+      out[l.cluster] = (out[l.cluster] ?? 0) + 1;
+    }
+    return out;
+  }, [all]);
+
+  /*
+    The six dials, in spec order. Area and rent sit last because putting them
+    first is the inversion this product exists to refuse.
+  */
+  const dials = [
+    { k: "Height", set: filters.minHeight !== null,
+      v: filters.minHeight === null ? "Any" : filters.minHeight.toFixed(1),
+      u: filters.minHeight === null ? "" : "m+" },
+    { k: "Crane", set: filters.crane !== null,
+      v: filters.crane === null ? "Any" : filters.crane === "provision" ? "Prov." : String(filters.crane),
+      u: typeof filters.crane === "number" ? "T+" : "" },
+    { k: "Power", set: filters.minPower !== null,
+      v: filters.minPower === null ? "Any" : fmtNumber(filters.minPower),
+      u: filters.minPower === null ? "" : "HP+" },
+    { k: "Docks", set: filters.minDocks !== null && filters.minDocks > 0,
+      v: filters.minDocks ? String(filters.minDocks) : "Any",
+      u: filters.minDocks ? "+" : "" },
+    { k: "Floor", set: filters.flooring.length > 0,
+      v: filters.flooring.length === 0 ? "Any"
+        : filters.flooring.length === 1 ? filters.flooring[0]
+        : `${filters.flooring.length} types`,
+      u: "" },
+    { k: "Area", set: filters.minArea !== null,
+      v: filters.minArea === null ? "Any" : fmtNumber(filters.minArea),
+      u: filters.minArea === null ? "" : "sq ft+" },
+  ];
+
   const toggleCluster = (c: string) =>
     patch({
       clusters: filters.clusters.includes(c)
@@ -116,66 +154,23 @@ export function SearchShell({ all }: { all: Listing[] }) {
     });
 
   return (
-    /* The territory is the page: the map fills it and every panel floats on it. */
-    <div className="fixed inset-0 overflow-hidden">
-      <div className="absolute inset-0">
-        {mapReady ? (
-          <ListingMap
-            listings={displayed}
-            activeSlug={activeSlug}
-            hoverSlug={hoverSlug}
-            basemap={basemap}
-            onSelect={selectFromMap}
-          />
-        ) : (
-          <div className="size-full bg-ground" />
-        )}
-      </div>
+    /* Three panes from 820px: rail, working column, map. Below that the rail
+       folds away and the column returns to a bottom sheet over the map. */
+    <div className="shell fixed inset-0 overflow-hidden">
+      <SearchRail
+        clusters={filters.clusters}
+        counts={clusterCounts}
+        onToggle={toggleCluster}
+      />
 
-      {/* Basemap switch, bottom-left, away from the result panel. */}
-      <div className="panel absolute bottom-3 left-2 z-20 hidden p-1 sm:left-3 sm:block">
-        <div className="segment">
-          {BASEMAPS.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              aria-pressed={basemap === b.id}
-              onClick={() => setBasemap(b.id)}
-            >
-              {b.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Zone chips: the legend and the cluster filter, one control. */}
-      <div className="zone-rail hidden panel:block">
-        <div className="panel mx-auto flex w-fit max-w-full items-center gap-1.5 overflow-x-auto p-1.5 scrollbar-slim">
-          {CLUSTERS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className="chip"
-              data-zone
-              aria-pressed={filters.clusters.includes(c)}
-              style={{ ["--zone" as string]: zoneOf(c) }}
-              onClick={() => toggleCluster(c)}
-            >
-              <span className="chip-dot" aria-hidden="true" />
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Filter sheet. Floating panel on desktop, full sheet on phones. */}
+      {/* Filters replace the column while open, rather than covering the map. */}
       {filtersOpen ? (
         <div
-          className="absolute inset-0 z-40 bg-[rgba(16,24,40,0.35)] lg:bg-transparent"
+          className="absolute inset-0 z-40 bg-[rgba(16,24,40,0.35)] panel:bg-transparent"
           onClick={() => setFiltersOpen(false)}
         >
           <div
-            className="panel absolute inset-x-0 bottom-0 top-16 flex flex-col overflow-hidden sm:inset-x-3 lg:inset-auto lg:bottom-3 lg:left-3 lg:top-[calc(var(--topbar-h)+1.25rem)] lg:w-[320px]"
+            className="panel absolute inset-x-0 bottom-0 top-16 flex flex-col overflow-hidden sm:inset-x-3 panel:inset-y-0 panel:left-[var(--rail-w)] panel:w-[var(--col-w)] panel:rounded-none panel:border-r panel:border-line panel:bg-surface panel:shadow-none panel:backdrop-filter-none"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -206,7 +201,9 @@ export function SearchShell({ all }: { all: Listing[] }) {
         {/* The card headings are h3, so the list needs its own h2 to keep the
             document outline unbroken. Visually redundant with the count. */}
         <h2 className="sr-only">Matching listings</h2>
-        <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
+
+        {/* Phone: one compact bar, because the sheet has to stay a sheet. */}
+        <div className="flex items-center gap-2 border-b border-line px-3 py-2.5 panel:hidden">
           <button
             type="button"
             className="chip"
@@ -221,12 +218,58 @@ export function SearchShell({ all }: { all: Listing[] }) {
           </p>
           <button
             type="button"
-            className="btn-quiet ms-auto !min-h-8 !px-2.5 panel:hidden"
+            className="btn-quiet ms-auto !min-h-8 !px-2.5"
             aria-expanded={listOpen}
             onClick={() => setListOpen((v) => !v)}
           >
             {listOpen ? "Hide list" : "Show list"}
           </button>
+        </div>
+
+        {/*
+          Wide: the requirement stands above the results it produces and does
+          not scroll away with them. Each dial opens the full set at the group
+          it names, so a value is never more than one press from being changed.
+        */}
+        <div className="hidden shrink-0 border-b border-line px-4 pb-4 pt-4 panel:block">
+          <h1 className="text-lg">Requirement</h1>
+          <p className="mt-0.5 text-sm text-muted">
+            Filter by the numbers a manager actually specifies.
+          </p>
+
+          <div className="dial-grid mt-3">
+            {dials.map((d) => (
+              <button
+                key={d.k}
+                type="button"
+                className="dial"
+                data-set={d.set ? "true" : "false"}
+                onClick={() => setFiltersOpen(true)}
+              >
+                <span className="k">{d.k}</span>
+                <span className="v">
+                  {d.v}
+                  {d.u ? <span className="u">{d.u}</span> : null}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 flex items-baseline gap-2">
+            <p className="text-sm" aria-live="polite">
+              <span className="num font-bold">{fmtNumber(result.total)}</span>{" "}
+              <span className="text-muted">
+                {result.total === 1 ? "match" : "matches"} of {fmtNumber(all.length)}
+              </span>
+            </p>
+            <button
+              type="button"
+              className="ms-auto text-sm text-action underline"
+              onClick={() => setFiltersOpen(true)}
+            >
+              All filters{activeCount > 0 ? ` · ${activeCount}` : ""}
+            </button>
+          </div>
         </div>
 
         {/* Reads the whole set, not the filtered page: a count and a map full of
@@ -322,6 +365,39 @@ export function SearchShell({ all }: { all: Listing[] }) {
           </p>
         </noscript>
       </section>
+
+      {/*
+        The map pane. Its controls sit inside it rather than on the shell, so
+        they float over the map they belong to and never over the rail.
+      */}
+      <div className="shell-map absolute inset-0">
+        {mapReady ? (
+          <ListingMap
+            listings={displayed}
+            activeSlug={activeSlug}
+            hoverSlug={hoverSlug}
+            basemap={basemap}
+            onSelect={selectFromMap}
+          />
+        ) : (
+          <div className="size-full bg-ground" />
+        )}
+
+        <div className="panel absolute bottom-3 left-3 z-20 hidden p-1 sm:block">
+          <div className="segment">
+            {BASEMAPS.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                aria-pressed={basemap === b.id}
+                onClick={() => setBasemap(b.id)}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

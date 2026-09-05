@@ -42,13 +42,10 @@
 
 :root {
   /*
-    How much of the map's right edge the docked result panel occupies. Zero
-    while the panel is still a bottom sheet. Both the panel and the zone rail
-    read this, so the rail can never slide underneath the panel.
+    Panels are the phone arrangement now. On a wide screen the same surfaces are
+    opaque panes with hard edges, so translucency applies only where something
+    genuinely floats over the map: its own controls.
   */
-  --dock-w: 0px;
-
-  /* Sign panels: translucent white over the territory, never opaque. */
   --panel: rgba(255, 255, 255, 0.94);
   --panel-blur: blur(14px) saturate(1.4);
   --shadow-panel: 0 8px 28px rgba(16, 24, 40, 0.12), 0 1px 3px rgba(16, 24, 40, 0.08);
@@ -350,41 +347,205 @@
   }
 }
 
+/*
+  From 820px the screen becomes three panes with hard edges - navigation rail,
+  working column, map - rather than a map with panels floating on it. Panels
+  over a map cost the map the area they cover and can hide their own controls;
+  panes cannot. The map keeps floating controls because they belong to the map.
+*/
 @media (min-width: 820px) {
   :root {
-    --dock-w: 340px;
+    --rail-w: 244px;
+    --col-w: 372px;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: var(--rail-w) var(--col-w) 1fr;
+  }
+
+  /* The map stops being the ground and becomes the third pane. */
+  .shell-map {
+    position: relative;
+    inset: auto;
   }
 
   .results-dock,
   .results-dock[data-open="false"],
   .results-dock[data-open="true"] {
-    left: auto;
-    right: 0.75rem;
-    top: calc(var(--topbar-h) + 1.25rem);
-    width: var(--dock-w);
+    position: static;
+    inset: auto;
+    width: auto;
     max-height: none;
+    border-radius: 0;
+    border-right: 1px solid var(--color-line);
+    background: var(--color-surface);
+    box-shadow: none;
+    backdrop-filter: none;
   }
 }
 
-@media (min-width: 1024px) {
-  /* Same selector list as the 820px block, so specificity matches and this
-     wider value actually wins. */
+@media (min-width: 1180px) {
   :root {
-    --dock-w: 390px;
+    --col-w: 404px;
   }
 }
 
 /*
-  The zone rail sits over the map only, never under the docked panel. Centring
-  it against the full viewport put Pirangut and Other behind the panel at every
-  width the rail is visible, where a click landed on a result card instead.
+  The navigation rail. Clusters live here permanently rather than as chips
+  floating over the map: as chips they could be covered by the result panel,
+  and two of the nine regularly were.
 */
-.zone-rail {
-  position: absolute;
-  left: 0.75rem;
-  right: calc(var(--dock-w) + 1.5rem);
-  bottom: 0.75rem;
-  z-index: 20;
+/*
+  Hidden below the three-pane breakpoint in CSS, not with a utility: .rail is
+  unlayered and would win over Tailwind's layered `hidden`, leaving the rail on
+  a phone.
+*/
+.rail {
+  display: none;
+  flex-direction: column;
+  background: #fbfbfa;
+  border-right: 1px solid var(--color-line);
+  padding: 0.875rem 0.625rem;
+  overflow: hidden;
+}
+
+@media (min-width: 820px) {
+  .rail {
+    display: flex;
+  }
+}
+
+.rail-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.rail-link .ic {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(16, 24, 40, 0.06);
+  color: var(--color-ink);
+  flex: none;
+}
+
+.rail-link:hover {
+  background: rgba(16, 24, 40, 0.045);
+}
+
+.rail-link[aria-current="page"] {
+  background: rgba(24, 98, 220, 0.1);
+  color: var(--color-action);
+  font-weight: 600;
+}
+
+.rail-link[aria-current="page"] .ic {
+  background: var(--color-action);
+  color: #fff;
+}
+
+/* A cluster row carries its hue and its count; pressed fills with the hue. */
+.cluster-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.84375rem;
+  text-align: start;
+}
+
+.cluster-row:hover {
+  background: rgba(16, 24, 40, 0.045);
+}
+
+.cluster-row[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--zone) 14%, transparent);
+  font-weight: 600;
+}
+
+.cluster-row .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--zone);
+  flex: none;
+}
+
+.cluster-row .n {
+  margin-inline-start: auto;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  The requirement block: the filter is the product, so it does not scroll away
+  with the results it produces.
+*/
+.dial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.dial {
+  border: 1px solid var(--color-line-strong);
+  border-radius: 10px;
+  padding: 0.5rem 0.625rem 0.5625rem;
+  background: var(--color-surface);
+  text-align: start;
+}
+
+.dial:hover {
+  border-color: var(--color-action);
+}
+
+.dial[data-set="true"] {
+  border-color: var(--color-action);
+  box-shadow: inset 0 0 0 1px var(--color-action);
+}
+
+.dial .k {
+  display: block;
+  font-size: 0.65625rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.dial .v {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dial .v .u {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  margin-inline-start: 0.125rem;
+}
+
+.dial[data-set="false"] .v {
+  color: var(--color-faint);
+  font-weight: 500;
 }
 
 /*

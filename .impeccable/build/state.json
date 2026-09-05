@@ -1,51 +1,37 @@
 {
   "tool": "build-phase",
   "version": 2,
-  "startedAt": "2026-09-02T20:06:00.572Z",
+  "startedAt": "2026-09-05T13:02:34.893Z",
   "comp": null,
-  "direction": "9d52674d",
+  "direction": "74d0c824",
   "breakpoint": null,
   "artifact": null,
-  "phase": "spec",
+  "phase": "comps",
   "phases": {
     "comps": {
-      "status": "closed",
-      "openedAt": "2026-09-02T20:06:00.571Z",
-      "closedAt": "2026-09-02T20:10:14.291Z",
-      "attempts": 2,
+      "status": "open",
+      "openedAt": "2026-09-05T13:02:34.893Z",
+      "closedAt": null,
+      "attempts": 1,
       "notes": [],
       "gate": {
         "ok": false,
         "reasons": [
-          "0 comps under .impeccable\\mocks; the comp round puts three compositional options of the chosen direction in front of the user (reference/visualize.md). Generate the missing ones (harness image tool or generate-image.mjs), each with a .json sidecar holding its prompt.",
+          "0 comps under .impeccable/mocks; the comp round puts three compositional options of the chosen direction in front of the user (reference/visualize.md). Generate the missing ones (harness image tool or generate-image.mjs), each with a .json sidecar holding its prompt.",
           "no comp is approved: put the three comps in front of the user (decision page via serve-question.mjs, or the structured question tool), then set \"approved\": true in the chosen comp's sidecar. A delegated pick is recorded the same way and disclosed."
         ],
         "summary": "0 comps, 0 approved",
-        "approved": null,
-        "at": "2026-09-02T20:10:14.287Z"
+        "at": "2026-09-05T13:03:09.535Z"
       },
-      "forced": {
-        "at": "2026-09-02T20:10:14.291Z",
-        "reason": "User was offered the comp round and declined it in favour of a pinned live reference: asked how to proceed without image generation, they answered verbatim 'Same like www.punetechmap.in'. That site is the approved composition; I captured its live DOM (1440x900) for exact geometry - 66px floating top bar, full-bleed map beneath, floating panels at 16px radius on rgba(255,255,255,0.95) with backdrop blur(12px), coloured pin halos. A brief-pinned direction beats the roll.",
-        "reasons": [
-          "0 comps under .impeccable\\mocks; the comp round puts three compositional options of the chosen direction in front of the user (reference/visualize.md). Generate the missing ones (harness image tool or generate-image.mjs), each with a .json sidecar holding its prompt.",
-          "no comp is approved: put the three comps in front of the user (decision page via serve-question.mjs, or the structured question tool), then set \"approved\": true in the chosen comp's sidecar. A delegated pick is recorded the same way and disclosed."
-        ]
-      }
+      "forced": null
     },
     "spec": {
-      "status": "open",
-      "openedAt": "2026-09-02T20:10:14.291Z",
+      "status": "pending",
+      "openedAt": null,
       "closedAt": null,
-      "attempts": 3,
+      "attempts": 0,
       "notes": [],
-      "gate": {
-        "ok": false,
-        "reasons": [
-          "no spec at .impeccable\\build\\spec.json: run comp-spec.mjs --comp null --grid, name the regions, then --regions regions.json"
-        ],
-        "at": "2026-09-02T20:10:28.843Z"
-      },
+      "gate": null,
       "forced": null
     },
     "plates": {

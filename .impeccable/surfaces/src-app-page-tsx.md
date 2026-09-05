@@ -15,19 +15,23 @@ A factory or logistics manager sourcing a building around Pune, arriving with nu
 
 ## Direction contract
 
-THESIS: An industrial estate's own wayfinding system — colour-coded zones, pictograms, sign panels floating over the territory. It refuses the three-column proptech shell where a map is boxed into a leftover column; here the territory is the page and the panels sit on it like signage.
+THESIS: The interface is the building's load certificate, not a brochure for it. Refuses the proptech shell where specs are small chips under a photo and the map is decoration.
 
-OWN-WORLD: Full-bleed map ground. Floating sign panels: white at 94%, `backdrop-filter: blur(14px)`, 16px radius, 1px hairline, one soft shadow. Each of the eight clusters owns a zone hue used identically on pin, chip and card edge; availability rides pin ring style, never hue. One azure action accent (#1B6EF3) for controls. Google Sans throughout, tabular figures on every comparable number.
+OWN-WORLD: Ink #0E1116 on calibration paper #F6F4EF, signal amber #B45309 for action only, steel #48535E for structure. Engraved hairline rules replace card borders; a stamped data plate carries identity; tabular lining figures run at display scale. No floating white rounded rectangles anywhere — surfaces are ruled fields, not cards.
 
-STORY: He recognises his corridor by colour before reading a word, filters on crane and height, and reaches a phone number.
+STORY: He reads certified numbers before he reads a name, trusts them because they are set like measurements, and phones the broker.
 
-FIRST VIEWPORT: Map fills the viewport. A floating top bar (66px) carries wordmark, search, filter trigger, basemap toggle (Light / Voyager) and a filled azure "+ Add space for free". Results ride a floating panel on the right (380px, inset 16px); cluster chips float along the bottom. Map centre stays clear of panels.
+FIRST VIEWPORT: Stamped data-plate header. Under it one calibrated spec row — height, crane, power, docks, floor load — at display scale full width, each with unit and its unstated mark. Below, the map as a framed instrument window left, results as a ruled register right. Amber call action.
 
-FORM: Estate wayfinding, candidate 5 of 7; seed key 9d52674d.
+FORM: The Load Table, candidate 5 of 7 grounded; seed key 74d0c824.
 
-RAISE (from Viewfinder Bracket HUD, competitive): panels anchor to safe-area edges and the centre stays clear — never a panel over the pins being read.
+RAISE (from The Cutting Bench, declined): state is a mark, never a hue — verified, leased, built-to-suit and unstated each take a typographic mark, freeing colour to mean one thing.
 
-RAISE (from Struck Cathode Gauze, declined): no dividers or boxes inside panels; separation by space and colour field alone.
+RAISE (from The Vertical Feed, declined): one subject owns the first viewport; the three floating panels collapse into a single instrument face.
+
+RAISE (from Sneaker Box Stacks, declined): one unbreakable label grid on every row — locality, type, spec run, same positions without exception.
+
+RAISE (from Cyclorama Dawn, declined): availability is a labelled phase on a ramp, patterned as well as toned, so colour is never the only signal.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 

@@ -17,7 +17,14 @@ export default async function SearchPage() {
 
   return (
     <>
-      <SiteHeader subtitle="Sheds, warehouses and factory buildings on rent around Pune" floating />
+      {/* Phone only: from 820px the rail carries identity and navigation, and a
+          floating bar on top of it would be a second masthead. */}
+      <div className="panel:hidden">
+        <SiteHeader
+          subtitle="Sheds, warehouses and factory buildings on rent around Pune"
+          floating
+        />
+      </div>
       <main id="main" tabIndex={-1}>
         {/* The page had no h1 and no landmark: the accessibility tree opened on
             the filter group names. Visually redundant with the masthead, so it
