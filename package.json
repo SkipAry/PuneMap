@@ -8,7 +8,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "node --experimental-strip-types scripts/seed.ts",
-    "test": "node --experimental-strip-types src/lib/query.test.ts"
+    "test": "node --experimental-strip-types src/lib/query.test.ts && node --experimental-strip-types src/lib/listing-checks.test.ts",
+    "test:checks": "node --experimental-strip-types src/lib/listing-checks.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",

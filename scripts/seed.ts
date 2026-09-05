@@ -14,7 +14,7 @@ import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 import { listingsFromCsv } from "../src/lib/csv.ts";
-import { AVAILABILITY, CLUSTERS, PROPERTY_TYPES } from "../src/lib/types.ts";
+import { checkListings } from "../src/lib/listing-checks.ts";
 
 const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -25,28 +25,24 @@ async function main() {
 
   if (listings.length === 0) throw new Error("data/seed.csv parsed to zero rows");
 
-  // Validate before writing - a typo in a cluster name silently breaks filtering.
-  const problems: string[] = [];
-  const seen = new Set<string>();
-  for (const l of listings) {
-    if (seen.has(l.slug)) problems.push(`duplicate slug: ${l.slug}`);
-    seen.add(l.slug);
-    if (!CLUSTERS.includes(l.cluster as (typeof CLUSTERS)[number]))
-      problems.push(`${l.slug}: unknown cluster "${l.cluster}"`);
-    if (!PROPERTY_TYPES.includes(l.property_type as (typeof PROPERTY_TYPES)[number]))
-      problems.push(`${l.slug}: unknown property_type "${l.property_type}"`);
-    if (!AVAILABILITY.includes(l.availability as (typeof AVAILABILITY)[number]))
-      problems.push(`${l.slug}: unknown availability "${l.availability}"`);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(l.last_verified))
-      problems.push(`${l.slug}: last_verified must be YYYY-MM-DD, got "${l.last_verified}"`);
-  }
+  /*
+    The placeholder rows still in the repo cannot pass the checks that matter
+    for real inventory - they have no source_url and carry unallocatable phone
+    numbers, both on purpose. `npm run seed -- --sample` keeps loading them
+    while the site is being built; real data must clear the strict pass.
+  */
+  const allowSampleData = process.argv.includes("--sample");
+  const problems = checkListings(listings, { allowSampleData });
 
   if (problems.length) {
     for (const p of problems) console.error(`  ✗ ${p}`);
     throw new Error(`${problems.length} invalid row(s) - nothing written`);
   }
 
-  console.log(`Parsed ${listings.length} valid rows from data/seed.csv`);
+  console.log(
+    `Parsed ${listings.length} valid rows from data/seed.csv` +
+      (allowSampleData ? " (sample rules - attribution and phone checks skipped)" : ""),
+  );
 
   if (!url || !key) {
     console.log("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set - validation only, no write.");
