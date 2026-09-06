@@ -340,7 +340,7 @@ export default async function ShedPage({ params }: Params) {
           the same page.
         */}
         <div className="detail-map hidden panel:block">
-          <StaticLocator listing={listing} context={all} height="100%" />
+          <StaticLocator listing={listing} context={all} height="100%" frame="tall" />
         </div>
       </div>
 

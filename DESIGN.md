@@ -541,11 +541,25 @@ Floating over the map on the search screen; sticky and solid on every document p
 
 ### Static locator
 
-An inline-SVG locator diagram used as the second column on listing and cluster pages: nearby
-listings as zone-coloured ticks, this one called out, plus a Pune reference mark, a
-compass phrase ("18 km north-west of Pune") and a scale bar. No tile service, no key, no
-client JavaScript. Bounds are fitted to the frame's aspect before projecting, so the
-projection stays isotropic and the scale bar does not lie.
+An inline-SVG locator diagram used as the second column on listing and cluster pages:
+nearby listings as zone-coloured ticks, this one called out with a short surveyor's mark,
+plus a Pune reference mark, a compass phrase ("18 km north-west of Pune") and a scale bar.
+No tile service, no key, no client JavaScript.
+
+Three rules keep it honest and full:
+
+- **Bounds are fitted to the frame's aspect before projecting**, so the projection stays
+  isotropic and the scale bar does not lie in one direction.
+- **The frame must hold this plot and Pune; context may only widen it while it stays
+  near** — a neighbour is a point no further from this shed than Pune is. The listing page
+  passes every listing on the site, and without that rule a single outlier set the bounds
+  and squeezed the eight real clusters into a third of the drawing.
+- **The viewBox matches the box it is given** — 5:3 inline, 15:14 in the near-square pane.
+  One ratio for both letterboxed the pane to 63% of its height, which reads as a
+  half-empty diagram rather than as the frame it is.
+
+The callout is a mark, not a pair of axes. Full-width rules through the plot read as a
+graph and competed with the point they were identifying.
 
 ### Zone chip
 

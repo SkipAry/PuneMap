@@ -44,11 +44,19 @@ export function StaticLocator({
   listing,
   context,
   height = 190,
+  frame = "wide",
 }: {
   listing: Listing;
   context: Listing[];
   /** A number of pixels, or a CSS length when the locator fills a pane. */
   height?: number | string;
+  /**
+   * The shape of the box this figure is given. The drawing keeps a uniform
+   * projection and is fitted with "meet", so a 5:3 viewBox in the near-square
+   * pane letterboxed to 528 of its 840 pixels - the white space read as a
+   * half-empty diagram rather than as the frame it is.
+   */
+  frame?: "wide" | "tall";
 }) {
   const points = context.filter((l) => l.lat !== null && l.lng !== null);
 
@@ -67,10 +75,22 @@ export function StaticLocator({
 
   const here = { lng: listing.lng, lat: listing.lat };
 
-  // Pune is part of the frame, not just the plot: the reference has to be on
-  // screen for the crosshair to mean anything.
-  const lats = [...points.map((p) => p.lat as number), listing.lat, PUNE.lat];
-  const lngs = [...points.map((p) => p.lng as number), listing.lng, PUNE.lng];
+  /*
+    What the frame has to hold: this plot and Pune. Everything else is context,
+    and context is only allowed to widen the frame while it stays near - a
+    neighbour is a point no further from this shed than Pune is.
+
+    The shed page passes every listing on the site, so without that rule one
+    outlier 80km away set the bounds and squeezed the eight real clusters into
+    a third of the drawing, with white space for the rest.
+  */
+  const reach = distanceKm(PUNE, here);
+  const near = points.filter(
+    (p) => distanceKm(here, { lat: p.lat as number, lng: p.lng as number }) <= reach,
+  );
+
+  const lats = [...near.map((p) => p.lat as number), listing.lat, PUNE.lat];
+  const lngs = [...near.map((p) => p.lng as number), listing.lng, PUNE.lng];
   const padLat = (Math.max(...lats) - Math.min(...lats)) * 0.08 || 0.02;
   const padLng = (Math.max(...lngs) - Math.min(...lngs)) * 0.08 || 0.02;
 
@@ -80,7 +100,7 @@ export function StaticLocator({
   let maxLng = Math.max(...lngs) + padLng;
 
   const W = 600;
-  const H = 360;
+  const H = frame === "tall" ? 560 : 360;
 
   /*
     Fit the bounds to the frame's own aspect before projecting. Mapping latitude
@@ -111,7 +131,7 @@ export function StaticLocator({
   const px = x(PUNE.lng);
   const py = y(PUNE.lat);
 
-  const km = distanceKm(PUNE, here);
+  const km = reach;
   const direction = compass(PUNE, here);
 
   // One scale for both axes now, so the roundest bar that fits is honest.
@@ -152,7 +172,7 @@ export function StaticLocator({
           ))}
         </g>
 
-        {points
+        {near
           .filter((p) => p.slug !== listing.slug)
           .map((p) => (
             <circle
@@ -180,17 +200,24 @@ export function StaticLocator({
           </text>
         </g>
 
-        {/* This listing: full-width cross-hair, the way a plot is called out. */}
-        <g stroke="var(--color-action)" strokeWidth="1.5">
-          <line x1={0} y1={cy} x2={W} y2={cy} />
-          <line x1={cx} y1={0} x2={cx} y2={H} />
+        {/*
+          This listing: a surveyor's mark on the plot rather than axes across
+          the whole drawing. Full-width rules read as a graph and competed with
+          the thing they were pointing at; four short arms with a gap around
+          the dot say "here" and then stop.
+        */}
+        <g stroke="var(--color-action)" strokeWidth="1.5" strokeLinecap="round">
+          <line x1={cx - 30} y1={cy} x2={cx - 13} y2={cy} />
+          <line x1={cx + 13} y1={cy} x2={cx + 30} y2={cy} />
+          <line x1={cx} y1={cy - 30} x2={cx} y2={cy - 13} />
+          <line x1={cx} y1={cy + 13} x2={cx} y2={cy + 30} />
         </g>
         <circle cx={cx} cy={cy} r="7" fill={zoneOf(listing.cluster)} stroke="#fff" strokeWidth="3" />
 
         {/*
-          preserveAspectRatio="slice" crops the viewBox to cover the figure, so
-          the callout is clamped well inside the frame rather than positioned
-          purely relative to the plot.
+          Clamped inside the frame rather than placed purely relative to the
+          plot: a listing near an edge would otherwise hang its label off it,
+          and SVG text neither wraps nor shrinks to fit.
         */}
         <g
           transform={`translate(${Math.min(Math.max(cx + 12, 14), W - 230)} ${Math.min(
@@ -213,11 +240,7 @@ export function StaticLocator({
           </text>
         </g>
 
-        {/*
-          Scale bar: without it the grid states no distance at all. Held 40
-          units off the foot because "slice" crops the viewBox vertically on
-          the wider figure a phone gives it.
-        */}
+        {/* Scale bar: without it the grid states no distance at all. */}
         <g transform={`translate(16 ${H - 40})`}>
           <line x1={0} y1={0} x2={barUnits} y2={0} stroke="var(--color-ink)" strokeWidth="2" />
           <line x1={0} y1={-4} x2={0} y2={4} stroke="var(--color-ink)" strokeWidth="2" />

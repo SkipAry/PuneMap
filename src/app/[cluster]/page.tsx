@@ -170,7 +170,7 @@ export default async function ClusterPage({ params }: Params) {
         </main>
 
         <div className="detail-map hidden panel:block">
-          <StaticLocator listing={rows[0]} context={rows} height="100%" />
+          <StaticLocator listing={rows[0]} context={rows} height="100%" frame="tall" />
         </div>
       </div>
     </>
