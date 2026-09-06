@@ -239,6 +239,12 @@ off-canvas in a second, wider drawer that slides in from the same edge. Both are
 `<dialog>` elements, so the browser owns focus trapping, Esc and inertness, and both
 animate with a transform rather than with JavaScript holding the state.
 
+**The band is the whole site's chrome, not the map's.** Every page wears it — floating on
+the search screen, sticky on a document — with the same tiles at the same radius. Only its
+width changes, to line up with whatever the page puts underneath it. Clicking a result used
+to move the reader from a band of tiles to a plain white bar with a different control
+language, which reads as arriving somewhere else entirely.
+
 The result list is the exception to summoning, and deliberately so: it is the map's text
 equivalent, so it is never something a reader has to go and find. From 820px it is always
 on screen — a column down the start edge in map view, the full width in list view. Only a
@@ -295,13 +301,15 @@ They live in `src/lib/clusters.ts` and are mirrored nowhere else.
   4.5:1 on white but only reached 4.39 on the Ground the reading pages sit on.
 - **Faint** (`#98a2b3`): Unstated values and placeholders — visibly weaker than real data.
 - **Surface** (`#ffffff`): The paper a surface is printed on. Cards, dials, the result
-  column, the filter drawer, inputs.
-- **Ground** (`#eef1f5`): The page behind everything, the map fallback, and the bed the
-  locator column sits on.
+  column, the filter drawer, inputs, and the reading pages' column. Body copy set straight
+  onto the Ground was the one place on the site that read as unfinished rather than as a
+  choice, so About, Privacy and List a property sit on paper like everything else.
+- **Ground** (`#eef1f5`): The page behind everything, the map fallback, the bed the locator
+  column sits on, and the margin around a reading page's paper.
 - **Rail** (`#fbfbfa`): The menu drawer only - a half-step off Surface, so the drawer reads
   as a different kind of surface from the column it slid over.
-- **Panel** (white at 94%): Surfaces that genuinely float, over a 14px blur. On a phone
-  that is the sheet and the header; on a wide screen it is only the map's own controls.
+- **Panel** (white at 94%): Surfaces that genuinely float over the map, on a 14px blur —
+  the result column, the map's own controls, the phone sheet.
 - **Line** / **Line-strong** (ink at 8% / 16%): Borders and dividers.
 
 ### Named Rules
@@ -381,16 +389,26 @@ The map is `absolute inset-0` at every width. Over it:
   it is hidden in map view, and the tray's Map/List chip brings it back.
 - MapLibre's own controls sit top-left with a `margin-top` clearing the band.
 
+**The opening view is fitted to the listings**, once, on first load — bounds of every
+listing that carries coordinates, with padding measured rather than assumed: the column
+width is read from `--list-w` so it cannot drift from the CSS, and the sample-data warning
+is measured because it is conditional. `maxZoom: 11.5` stops a single surviving listing
+from opening at street level, where a lone pin says nothing about where it is. After that
+first fit the viewport belongs to the user, and a filter change never moves it.
+
+The map opens on Voyager. The style is set when the map is built rather than swapped after
+load, which used to cost a second style fetch and show the wrong basemap while it happened.
+
 ### The document pages
 
-A sticky solid masthead, then:
+The same band, sticky, then:
 
 - `.shell--detail` (`minmax(420px, 34rem) / 1fr`) — listing and cluster pages. The text
   column scrolls with the document; the second column holds a static SVG locator that is
-  `position: sticky` under the masthead at `100dvh - 60px`. Sticky rather than a fixed
-  pane, so the page keeps ordinary document scrolling and the masthead stays put.
-- Reading pages — About, Privacy, List a property — are one centred column at its own
-  measure. No grid, no second pane: there is no map to put in one.
+  `position: sticky` under the band at `100dvh - 60px`. Sticky rather than a fixed pane, so
+  the page keeps ordinary document scrolling and the band stays put.
+- Reading pages — About, Privacy, List a property, and the 404 — are one centred column of
+  paper at a 48rem measure, with the ground showing around it.
 
 The listing page grows a fixed call bar at the bottom below 768px, because the phone call
 is the conversion and it would otherwise sit below the entire specification.
@@ -401,7 +419,19 @@ is the conversion and it would otherwise sit below the entire specification.
 `clamp(2.75rem, 6vw, 4.5rem)` of vertical space — never by a tinted band. Each carries a
 two-digit marker (`01`, `02`, …) in Faint beside its heading, which is what makes the page
 read as a specification rather than as marketing. The hero is `1fr / 25rem` from 1024px
-and stacks below that.
+and stacks below that; sections 02 and 04 are `1fr / 22rem`, with the prose at its own
+measure on the left and a figure of evidence on the right.
+
+### The band's three measures
+
+The band spans the window and centres its tiles on whatever the page puts beneath them, so
+its first tile starts where the content starts and its last ends where the content ends:
+
+- **wide** — no cap. Listing and cluster pages, whose content begins at the window edge.
+- **reading** — 48rem from 820px. About, Privacy, List a property, the 404.
+- **wrap** — 65.5rem. The landing. Its `.wrap` is a 68rem *border* box holding 1.25rem of
+  padding either side, so matching it means taking the measure inside that padding; capping
+  at 68rem leaves the band 12px wide on each side of the content.
 
 ### Named Rules
 
@@ -423,11 +453,26 @@ reflows without shifting the page. CLS on the search screen is 0 and must stay 0
 **The Text Equivalent Rule.** The result list is always present and never behind a tab on
 desktop — it is the map's accessible equivalent.
 
-**The Unlayered Cascade Rule.** `.call-bar` is shown and hidden with a plain media query,
-never with `md:hidden`. It is unlayered CSS and beats Tailwind's layered utilities, so the
-utility silently loses and the element stays on screen. The same trap took the old `.rail`
-twice before it was removed. When a component class and a utility disagree about the same property, delete the
-losing declaration rather than stacking an override on it.
+**The Unlayered Cascade Rule.** A component class that sets `display` is shown and hidden
+with a plain media query, never with `hidden` / `md:hidden`. These classes are unlayered
+and beat Tailwind's layered utilities, so the utility silently loses and the element stays
+on screen at a width it has no business being at. This has now happened five times —
+`.rail` twice, `.call-bar`, `.tool-seg`, `.tool-btn` — and it never announces itself,
+because nothing errors. When a component class and a utility disagree about the same
+property, delete the losing declaration rather than stacking an override on it.
+
+**The Container, Not The Window Rule.** A grid inside a fixed-width column is keyed to that
+column, never to the viewport. `md:grid-cols-2` in a 544px reading column gives each card
+248px, and a five-cell spec strip in 248px ellipses the height and the power off every one
+of them — 31 clipped values on a single cluster page. The same rule sends the result list's
+card grid to the *view* rather than the window, because at 1100px the same window holds one
+column beside a map and three without it.
+
+**The Shrinkable Card Rule.** A card in a grid carries `min-width: 0`. A grid item may not
+shrink below its min-content by default, and a listing card's min-content is about 350px of
+nowrap spec cells, which burst a 367px column and pushed the whole page sideways. The strip
+is built to clip with an ellipsis, so it is allowed to — but see the rule above: it should
+never have to.
 
 ## Elevation & Depth
 
@@ -482,6 +527,11 @@ down to 360px. An unstated spec occupies its slot with an em dash in Faint plus 
 `title="Not stated in the listing"` tooltip. Long values take short forms
 (`Plain RCC` → `RCC`) rather than reflowing the grid.
 
+**It stays readable at 360px by giving up padding, not characters.** Five cells leave about
+44px for a value there and "200HP" wants 48, so below 390px the cell drops its inline
+padding to 4px and the figure drops one step to 13px. A clipped spec number is the one
+failure this component cannot have: the whole product is the claim that you can read these.
+
 ### Toolbar tile
 
 Everything in the band is one of these: 12px radius, white at 92% over a 12px blur, a
@@ -533,11 +583,16 @@ every platform and belongs to none of them.
 
 ### Masthead
 
-Menu button, then the wordmark, then About and Add space. No monogram: a lettermark in a
-rounded square beside a five-syllable name is the default move of a template, and it was
-adding a logo where the name already does the work.
+Brand tile carrying the menu button and the wordmark, then the page's own controls, then a
+single action at the end. No monogram: a lettermark in a rounded square beside a
+five-syllable name is the default move of a template, and it was adding a logo where the
+name already does the work.
 
-Floating over the map on the search screen; sticky and solid on every document page.
+Floating over the map on the search screen; sticky and solid everywhere else. The search
+screen and the landing build their own row from the shared tiles, because one leads with
+Filters and a basemap switch and the other with "Open the map"; every other page uses the
+component. A nav item pointing at the page you are on renders `aria-current="page"` in
+Action Blue rather than being dropped, so the row does not reshuffle when you land there.
 
 ### Static locator
 
@@ -607,6 +662,11 @@ A red-tinted band above any set of listings presented as inventory, shown only w
 row in it is scaffolding. It keys off the non-allocatable `+91555` phone prefix, so it
 removes itself the moment real listings land rather than waiting for someone to remember.
 
+It lives **inside** the result list, under its header, because that is where the inventory
+it warns about is presented. A floating copy exists for the one screen with no list to hold
+it — a phone in map view — and is hidden everywhere else. Floating on every screen, it
+landed on top of the list's own heading and count.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -621,6 +681,12 @@ removes itself the moment real listings land rather than waiting for someone to 
 - **Do** let a grouped pin stay white when its members span more than one zone.
 - **Do** compute a landing figure from the real data through the real filter. A number on
   that page that cannot be traced to `getListings()` does not belong on it.
+- **Do** read the evidence back against the sentence beside it. Putting the spec coverage
+  on screen contradicted a paragraph claiming listings are half-empty, because height and
+  docks are stated on 55 of 56. The copy changed, not the table.
+- **Do** key a grid to the column it sits in, not to the window.
+- **Do** open the map on the listings, and only once. After that the viewport is the
+  user's.
 
 ### Don't:
 
@@ -628,7 +694,11 @@ removes itself the moment real listings land rather than waiting for someone to 
 - **Don't** introduce a second edge for things to slide from.
 - **Don't** put a monogram beside the wordmark.
 - **Don't** hide a component class with a Tailwind utility. Unlayered CSS wins; use a
-  media query in the same stylesheet.
+  media query in the same stylesheet. Five times now.
+- **Don't** let a page set its body copy straight onto the ground. Content goes on paper.
+- **Don't** trust a grep of the HTML to tell you what a page looks like. The search screen
+  sat on its loading fallback in production while every route check returned 200, and the
+  404's band was in the RSC payload rather than the shell. Open it in a browser.
 - **Don't** give a card a coloured side border. The dot carries the zone; a 3px edge is the
   standard tell of a generated interface.
 - **Don't** colour anything that is neither a zone nor an action.
