@@ -224,6 +224,17 @@
     filter: brightness(1.08);
   }
 
+  /*
+    A call to action whose label is a sentence rather than a verb. .btn-action
+    is nowrap, which is right for a toolbar and wrong for "Filter these 13
+    listings by height, crane and power" - at 360px that ran 16px past the
+    screen and gave the whole page a horizontal scroll.
+  */
+  .btn-action--wrap {
+    white-space: normal;
+    text-align: center;
+  }
+
   .btn-quiet {
     display: inline-flex;
     align-items: center;
