@@ -106,11 +106,18 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
         </Field>
         <Field label="Phone">
           {/* Ten characters is the shortest a real number can be written; the
-              6-9 rule stays on the server where the message is better. */}
+              6-9 rule stays on the server where the message is better.
+
+              The pattern only bars what is definitely not a phone number:
+              minLength alone accepted "abcdefghij". Spaces, +, - and brackets
+              all stay legal, because people write numbers the way they write
+              them and the server is what actually decides. */}
           <input
             name="contact_phone"
             required
             minLength={10}
+            pattern="[0-9+()\-\s]{10,}"
+            title="Digits, with spaces, +, brackets or dashes if you like."
             type="tel"
             inputMode="tel"
             className="input"

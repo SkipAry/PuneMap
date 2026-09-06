@@ -434,7 +434,10 @@ export default async function LandingPage() {
                 },
                 {
                   t: "Every listing credits its source",
-                  d: "The site restructures publicly posted listings around industrial specs. It does not claim them, and each one links back.",
+                  // Was "each one links back", which is false while every row
+                  // is a placeholder with nothing to credit. The policy is the
+                  // claim; the link is what the policy produces on a real row.
+                  d: "The site restructures publicly posted listings around industrial specs. It does not claim them: a real listing names its original and links to it.",
                 },
               ].map((row) => (
                 <div key={row.t} className="grid gap-1 py-4 sm:grid-cols-[14rem_1fr] sm:gap-5">
