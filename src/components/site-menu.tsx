@@ -86,8 +86,14 @@ export function SiteMenu({
   onToggle?: (cluster: string) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Tracked so unmounting mid-handoff cannot open a drawer on a dead tree.
+  const handoff = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const close = useCallback(() => ref.current?.close(), []);
+
+  useEffect(() => () => {
+    if (handoff.current) clearTimeout(handoff.current);
+  }, []);
 
   // A drawer that fills the height still has a backdrop to its right, and a
   // click there should dismiss it the way a scrim does.
@@ -146,7 +152,8 @@ export function SiteMenu({
                   close();
                   // Let the menu finish sliding out before the filters slide
                   // in, or two drawers cross on the same edge.
-                  setTimeout(onFilters, 220);
+                  if (handoff.current) clearTimeout(handoff.current);
+                  handoff.current = setTimeout(onFilters, 220);
                 }}
               >
                 <span className="ic">

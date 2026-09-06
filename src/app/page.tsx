@@ -12,6 +12,7 @@ import { railCounts } from "@/lib/rail-counts";
 import { addressed } from "@/lib/site-url";
 import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
 
+
 export const metadata = {
   title: "Pune Industrial Space — filter sheds by clear height, crane and power",
   description:
@@ -71,9 +72,16 @@ export default async function LandingPage() {
   const match = applyFilters(all, HERO_REQUIREMENT);
   const heroHref = `/search?${serialiseFilters(HERO_REQUIREMENT).toString()}`;
 
-  // The comparison needs a row that actually states the specs, or the left side
-  // has nothing to bury and the right side has nothing to line up.
-  const specimen =
+  /*
+    The comparison needs a row that actually states the specs, or the left side
+    has nothing to bury and the right side has nothing to line up.
+
+    May be undefined: an empty `listings` table is the normal state between
+    provisioning Supabase and running the first seed, and dereferencing this
+    took the front door down with a 500. The section it feeds is skipped
+    instead - see below.
+  */
+  const specimen: Listing | undefined =
     live.find(
       (l) =>
         l.height_m !== null &&
@@ -90,6 +98,13 @@ export default async function LandingPage() {
     the site uses. This is the section's own claim measured rather than
     asserted: every one of these gaps is an em dash on a card somewhere.
   */
+  /*
+    Never divide by the row count directly. An empty `listings` table is the
+    normal state between provisioning Supabase and running the first seed, and
+    0/0 rendered `width: NaN%` on every bar.
+  */
+  const denom = live.length || 1;
+
   const coverage: { label: string; n: number }[] = [
     { label: "Clear height", n: live.filter((l) => l.height_m !== null).length },
     { label: "Crane capacity", n: live.filter((l) => l.crane_capacity_ton !== null).length },
@@ -245,7 +260,9 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* ── 01 The gap, shown rather than argued. ── */}
+        {/* ── 01 The gap, shown rather than argued. Needs a real listing to
+               show it with, so it stands down on an empty table. ── */}
+        {specimen ? (
         <section className="sec">
           <div className="wrap">
             <Marker n="01">The same building, two ways</Marker>
@@ -291,6 +308,7 @@ export default async function LandingPage() {
             </div>
           </div>
         </section>
+        ) : null}
 
         {/* ── 02 The null contract: the trust argument. ── */}
         <section className="sec">
@@ -352,7 +370,7 @@ export default async function LandingPage() {
                     >
                       <div
                         className="h-full rounded-full bg-action"
-                        style={{ width: `${Math.round((c.n / live.length) * 100)}%` }}
+                        style={{ width: `${Math.round((c.n / denom) * 100)}%` }}
                       />
                     </div>
                   </div>

@@ -111,13 +111,39 @@ assert.ok(
   "a lump-sum listing still yields a rate per sq ft",
 );
 
+// --- free text: matches where and what, never a spec ---------------------
+const textHit = applyFilters(all, f({ q: "chakan" }));
+assert.ok(textHit.total > 0, "a cluster name must be findable as text");
+assert.equal(
+  textHit.nullExcludedTotal,
+  0,
+  "text search reads NOT NULL columns, so it can never exclude a row for being unstated",
+);
+assert.equal(
+  applyFilters(all, f({ q: "12" })).total,
+  0,
+  "text must not reach the specs - numbers belong to the filters, where unstated has a meaning",
+);
+
+/*
+  The field writes what parseFilters would read back. Writing raw and
+  comparing against the parsed value put the two in different domains, which
+  deleted a typed space out of the input and made "chakan warehouse"
+  impossible to type.
+*/
+assert.equal(
+  parseFilters(new URLSearchParams(serialiseFilters(f({ q: "chakan " })).toString())).q,
+  "chakan",
+  "a trailing space must survive the round trip as its normalised form",
+);
+
 // --- the URL is the state ------------------------------------------------
-const round = f({ clusters: ["Chakan"], minHeight: 12, crane: 10, minArea: 20000 });
+const round = f({ clusters: ["Chakan"], minHeight: 12, crane: 10, minArea: 20000, q: "chakan" });
 const restored = parseFilters(new URLSearchParams(serialiseFilters(round).toString()));
 assert.deepEqual(restored, round, "filters must survive a round trip through the URL");
 assert.equal(
   serialiseFilters(round).toString(),
-  new URLSearchParams("cluster=chakan&minHeight=12&crane=10&minArea=20000").toString(),
+  new URLSearchParams("q=chakan&cluster=chakan&minHeight=12&crane=10&minArea=20000").toString(),
   "the shareable URL keeps the documented parameter names",
 );
 

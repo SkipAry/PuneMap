@@ -6,7 +6,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { zoneOf } from "@/lib/clusters";
 import { fmtNumber } from "@/lib/derive";
-import { activeFilterCount, parseFilters, serialiseFilters, type Filters } from "@/lib/filters";
+import {
+  activeFilterCount,
+  parseFilters,
+  Q_MAX,
+  serialiseFilters,
+  type Filters,
+} from "@/lib/filters";
 import { BASEMAPS, type BasemapId } from "@/lib/map-style";
 import { PAGE_SIZE, applyFilters, describeMiss } from "@/lib/query";
 import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
@@ -103,7 +109,12 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const [view, setView] = useState<View>("map");
 
   const filtersRef = useRef<HTMLDialogElement>(null);
-  const openFilters = useCallback(() => filtersRef.current?.showModal(), []);
+  // showModal() on an already-open dialog throws, and the menu opens this one
+  // on a timer - so the toolbar button can land on top of that.
+  const openFilters = useCallback(() => {
+    const d = filtersRef.current;
+    if (d && !d.open) d.showModal();
+  }, []);
   const closeFilters = useCallback(() => filtersRef.current?.close(), []);
 
   /*
@@ -112,15 +123,29 @@ export function SearchShell({ all }: { all: Listing[] }) {
   */
   const [q, setQ] = useState(filters.q);
   useEffect(() => setQ(filters.q), [filters.q]);
+  /*
+    Compare and write in the same normalised form parseFilters uses. Writing
+    the raw value and comparing it against the parsed one put the two in
+    different domains: typing a space sent "?q=chakan+", which parsed back to
+    "chakan", which then reset the field and deleted the space under the
+    cursor - so "chakan warehouse" could not be typed at all.
+  */
   useEffect(() => {
-    if (q === filters.q) return;
-    const t = setTimeout(() => write({ ...filters, q }, "replace"), 250);
+    const normalised = q.trim().slice(0, Q_MAX);
+    if (normalised === filters.q) return;
+    const t = setTimeout(() => write({ ...filters, q: normalised }, "replace"), 250);
     return () => clearTimeout(t);
   }, [q, filters, write]);
 
   const selectFromMap = useCallback((slug: string) => {
     setActiveSlug(slug);
-    setView("list");
+    /*
+      Only where the list is hidden. From 820px the card is already on screen
+      beside the map, and switching to the full-width list to show it covered
+      the territory the reader had just clicked into - so a second pin could
+      not be picked without switching back.
+    */
+    if (!window.matchMedia("(min-width: 820px)").matches) setView("list");
     // The card is in a list that has just been mounted, so wait a frame.
     requestAnimationFrame(() => {
       const node = document.getElementById(`card-${slug}`);

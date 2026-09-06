@@ -158,8 +158,17 @@ export default function ListingMap({
   onSelectRef.current = onSelect;
   const listingsRef = useRef(listings);
   listingsRef.current = listings;
-  // Read once when the map is built, so the opening style is the chosen one.
+  /*
+    Two refs, because a style swap can be asked for before the map can serve
+    it: `wanted` is the latest press, `applied` is what the map actually has.
+    With one ref, pressing a basemap while the tiles were still loading was
+    swallowed - the guard returned early and nothing ever re-ran - leaving the
+    pressed button lit over the wrong map on exactly the slow connections the
+    product doc says to expect.
+  */
   const basemapRef = useRef(basemap);
+  basemapRef.current = basemap;
+  const appliedBasemap = useRef(basemap);
 
   /** Source and layers are re-added whenever the basemap style swaps them out. */
   const addLayers = (instance: MapLibreMap) => {
@@ -265,6 +274,18 @@ export default function ListingMap({
       },
     });
 
+  };
+
+  /*
+    Registered once, at construction, never inside addLayers. addLayers runs
+    again after every basemap swap - a style change wipes the source, so its
+    "already added?" guard passes - and MapLibre keeps map-level listeners
+    across that change. Registering here too meant one pin click fired N+1
+    times after N basemap switches, and a cluster click started N+1 competing
+    easeTo animations. Layer-scoped handlers may be bound before the layer
+    exists; they simply do not fire until it does.
+  */
+  const addInteractions = (instance: MapLibreMap) => {
     instance.on("click", "pins", (e) => {
       const slug = e.features?.[0]?.properties?.slug;
       if (typeof slug === "string") onSelectRef.current(slug);
@@ -304,11 +325,13 @@ export default function ListingMap({
       attributionControl: { compact: true },
       // The basemap the shell already chose. Opening on another one and
       // swapping costs a style load and shows the wrong map while it happens.
-      style: basemapStyle(basemapRef.current),
+      style: basemapStyle(appliedBasemap.current),
     });
 
     // Top-left, under the toolbar: the bottom of the map is the cluster tray's.
     instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+
+    addInteractions(instance);
 
     instance.on("load", () => {
       addLayers(instance);
@@ -330,6 +353,13 @@ export default function ListingMap({
           animate: false,
         });
       }
+
+      // A basemap pressed while the tiles were still loading was recorded as
+      // wanted but could not be applied. Apply it now.
+      if (basemapRef.current !== appliedBasemap.current) {
+        appliedBasemap.current = basemapRef.current;
+        instance.setStyle(basemapStyle(basemapRef.current) as never);
+      }
     });
 
     // A style swap wipes custom sources, so they are re-added each time.
@@ -349,8 +379,8 @@ export default function ListingMap({
 
   useEffect(() => {
     const instance = map.current;
-    if (!instance || !ready.current || basemap === basemapRef.current) return;
-    basemapRef.current = basemap;
+    if (!instance || !ready.current || basemap === appliedBasemap.current) return;
+    appliedBasemap.current = basemap;
     instance.setStyle(basemapStyle(basemap) as never);
   }, [basemap]);
 

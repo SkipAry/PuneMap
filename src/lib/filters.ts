@@ -21,6 +21,9 @@ export const RENT_MAX = 5_000_000;
 /** Ceiling for the crane param, so a typo cannot become a silent constraint. */
 export const CRANE_MAX = 100;
 
+/** Longest accepted search text. Shared so the field and the parser agree. */
+export const Q_MAX = 80;
+
 /** "provision" selects sheds with the gantry provision cast but no crane fitted. */
 export type CraneFilter = "provision" | number;
 
@@ -107,7 +110,7 @@ export function parseFilters(p: Params): Filters {
   }
 
   return {
-    q: (p.get("q") ?? "").trim().slice(0, 80),
+    q: (p.get("q") ?? "").trim().slice(0, Q_MAX),
     clusters,
     minHeight: numParam(p, "minHeight", HEIGHT_MIN, HEIGHT_MAX),
     crane,
