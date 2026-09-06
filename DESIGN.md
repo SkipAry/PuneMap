@@ -106,7 +106,7 @@ spacing:
 layout:
   breakpoint-panel: "820px"
   breakpoint-wide: "1180px"
-  toolbar-h: "60px"
+  band-h: "61px"
   toolbar-max: "80rem"
   drawer-w: "min(300px, 86vw)"
   drawer-w-wide: "min(420px, 92vw)"
@@ -554,10 +554,14 @@ panel left. One tray rather than nine floating pills, so they read as a set.
 
 ### Dial
 
-A bordered readout: the spec name in Key with a chevron, above the value in Readout with
-its unit at 11px. Set takes an Action Blue border, a 5% Action fill and an Action-coloured
-key — a filled state rather than a second border drawn inside the first. Three of them
-carry the landing hero's requirement.
+A bordered readout: the spec name in Key above the value in Readout with its unit at 11px.
+Set takes an Action Blue border, a 5% Action fill and an Action-coloured key — a filled
+state rather than a second border drawn inside the first. Three of them carry the landing
+hero's requirement.
+
+It is a readout, not a control. It carried a hover state and a disclosure chevron from
+when it opened the filter drawer; on three static divs those were painting an affordance
+onto something that does not respond.
 
 ### Menu drawer
 
@@ -675,6 +679,10 @@ landed on top of the list's own heading and count.
 - **Do** keep the spec strip's five cells fixed in order and position at every breakpoint.
 - **Do** use `tabular-nums` on every comparable number.
 - **Do** render unknowns as an em dash in Faint with a "Not stated in the listing" tooltip.
+- **Do** keep a stated absence distinct from an unstated one. "None" typed into a free-text
+  column is an answer, and it must not satisfy a filter asking for the thing to be there.
+- **Do** measure a token against the thing it names. Two tokens for one band, 4px apart and
+  neither of them its real height, left the sticky locator a pixel under it.
 - **Do** let the map keep the screen. A new surface earns its space or it slides away.
 - **Do** show what the data spans where a control is unset, rather than the word "Any".
 - **Do** put a `ch` measure on the element that sets the font size.

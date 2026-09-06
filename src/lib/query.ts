@@ -5,6 +5,13 @@ import type { Listing } from "./types.ts";
 export const PAGE_SIZE = 12;
 
 /**
+ * How an owner writes "there isn't one" in a free-text column. Distinct from
+ * null, which means nobody said - a stated absence is an answer, and it must
+ * not satisfy a filter asking for the thing to be present.
+ */
+const ABSENT = /^(none|nil|no|na|n\/a|not provided|not stated|absent|nothing)$/i;
+
+/**
  * One user-set constraint. `value` pulls the spec out of a listing; when it
  * returns null the broker never stated it, which is a different outcome from
  * failing the test and is counted separately.
@@ -104,7 +111,14 @@ function buildPredicates(f: Filters): Predicate[] {
       key: "fire",
       label: "a fire system",
       value: (l) => l.fire_system,
-      test: (() => true) as Predicate["test"],
+      /*
+        The control reads "Fire system present", so a stated value has to say
+        one is there. Passing everything non-null meant a row recorded as
+        "None" matched a search for buildings that have one. fire_system is
+        free text typed straight into the Supabase table editor, so the
+        negatives have to be read rather than enumerated.
+      */
+      test: ((v: string) => !ABSENT.test(v.trim())) as Predicate["test"],
       nullable: true,
     });
   }

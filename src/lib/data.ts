@@ -12,14 +12,35 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export const usingSupabase = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
+/**
+ * Most rows a single read will return. Every page loads the whole table and
+ * filters in memory, which is right for a few thousand listings around one
+ * city and would need paging long before this ceiling became a real limit.
+ */
+const MAX_LISTINGS = 5000;
+
 async function fromSupabase(): Promise<Listing[]> {
   const { createClient } = await import("@supabase/supabase-js");
   const db = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
     auth: { persistSession: false },
   });
 
-  const { data, error } = await db.from("listings").select("*");
+  /*
+    An explicit range, because PostgREST caps an unbounded select at its own
+    max-rows (commonly 1000) and returns the truncated page as a success. The
+    site would then show a count it could not account for and a map missing
+    pins, with nothing anywhere saying so. The ceiling is ours now, and it
+    says something when it is reached.
+  */
+  const { data, error } = await db.from("listings").select("*").range(0, MAX_LISTINGS - 1);
   if (error) throw new Error(`Supabase read failed: ${error.message}`);
+
+  if (data && data.length === MAX_LISTINGS) {
+    console.warn(
+      `getListings: read ${MAX_LISTINGS} rows, the ceiling in lib/data.ts. ` +
+        `There may be more, and everything downstream is counting a partial set.`,
+    );
+  }
 
   // numeric columns arrive as strings over PostgREST; coerce so the app only
   // ever sees numbers or null.

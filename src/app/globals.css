@@ -35,8 +35,13 @@
   /* Toolbar tiles are squarer than the pill controls inside the page: a bar of
      pills over a map reads as loose beads, a bar of tiles reads as one row. */
   --radius-tool: 12px;
-  --topbar-h: 60px;
-  --toolbar-h: 64px;
+  /*
+    The band's border box: 9px padding either side of a 42px row, plus its
+    1px rule. One token, because there is one band. It was two - a 60px
+    --topbar-h and a 64px --toolbar-h - neither of which was the real height,
+    so the sticky locator sat a pixel under the band it was meant to meet.
+  */
+  --band-h: 61px;
 
   /*
     Where the result panel can sit beside the map instead of over it. Set at
@@ -252,32 +257,6 @@
 
   .btn-quiet:hover {
     border-color: var(--color-ink);
-  }
-
-  /* Segmented control: the basemap switch. */
-  .segment {
-    display: inline-flex;
-    padding: 2px;
-    border-radius: 999px;
-    background: rgba(16, 24, 40, 0.06);
-  }
-
-  .segment > button {
-    min-height: 28px;
-    padding: 0.25rem 0.625rem;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--color-muted);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  .segment > button[aria-pressed="true"] {
-    background: #fff;
-    color: var(--color-ink);
-    box-shadow: var(--shadow-raised);
   }
 
   /*
@@ -571,7 +550,7 @@
   display: none;
   position: absolute;
   inset-inline: 0.75rem;
-  top: calc(var(--toolbar-h) + 0.75rem);
+  top: calc(var(--band-h) + 0.75rem);
   z-index: 26;
   max-width: 44rem;
   margin-inline: auto;
@@ -652,7 +631,7 @@
 */
 .list-view {
   position: absolute;
-  inset: calc(var(--toolbar-h) + 0.75rem) 0.75rem 4.5rem;
+  inset: calc(var(--band-h) + 0.75rem) 0.75rem 4.5rem;
   z-index: 24;
   display: none;
   flex-direction: column;
@@ -716,7 +695,7 @@
 
 /* MapLibre's own controls have to clear the band lying over them. */
 .shell-map .maplibregl-ctrl-top-left {
-  margin-top: var(--toolbar-h);
+  margin-top: var(--band-h);
 }
 
 /*
@@ -733,13 +712,13 @@
 
   .shell--detail .detail-col {
     border-right: 1px solid var(--color-line);
-    min-height: calc(100dvh - var(--topbar-h));
+    min-height: calc(100dvh - var(--band-h));
   }
 
   .detail-map {
     position: sticky;
-    top: var(--topbar-h);
-    height: calc(100dvh - var(--topbar-h));
+    top: var(--band-h);
+    height: calc(100dvh - var(--band-h));
     background: var(--color-ground);
     padding: 1.25rem;
   }
@@ -928,13 +907,6 @@ dialog.drawer[open]::backdrop {
   /* A dial is ~110px wide and its value never wraps, so anything unexpectedly
      long is clipped by the housing rather than escaping it. */
   overflow: hidden;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease;
-}
-
-.dial:hover {
-  border-color: var(--color-ink);
 }
 
 /* Set reads as a filled state, not as a second border drawn inside the first. */
@@ -957,19 +929,6 @@ dialog.drawer[open]::backdrop {
   color: var(--color-action);
 }
 
-/* The chevron is the affordance. Without it, six boxes read as readouts
-   rather than as the controls they are. */
-.dial .k::after {
-  content: "";
-  margin-inline-start: auto;
-  width: 5px;
-  height: 5px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-1px) rotate(45deg);
-  opacity: 0.5;
-}
-
 .dial .v {
   display: flex;
   align-items: baseline;
@@ -990,19 +949,6 @@ dialog.drawer[open]::backdrop {
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--color-muted);
-}
-
-/*
-  Unset does not say "Any" six times over. It shows what the listings actually
-  span on that spec, in the weight of a hint rather than of a value - so an
-  untouched requirement block is still telling the reader something.
-*/
-.dial[data-set="false"] .v,
-.dial[data-set="false"] .v .u {
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--color-faint);
 }
 
 /*

@@ -111,6 +111,24 @@ assert.ok(
   "a lump-sum listing still yields a rate per sq ft",
 );
 
+// --- "present" means present, not merely stated --------------------------
+const fireRows: Listing[] = [
+  { ...all[0], slug: "has-one", fire_system: "Sprinkler + hydrant" },
+  { ...all[0], slug: "says-none", fire_system: "None" },
+  { ...all[0], slug: "unstated", fire_system: null },
+];
+const fire = applyFilters(fireRows, f({ fire: true }));
+assert.deepEqual(
+  fire.listings.map((l) => l.slug),
+  ["has-one"],
+  "a row recorded as 'None' must not answer a search for a fire system",
+);
+assert.equal(
+  fire.nullExcludedTotal,
+  1,
+  "the unstated row drops out as unstated, and is counted as such - not as a refusal",
+);
+
 // --- free text: matches where and what, never a spec ---------------------
 const textHit = applyFilters(all, f({ q: "chakan" }));
 assert.ok(textHit.total > 0, "a cluster name must be findable as text");
