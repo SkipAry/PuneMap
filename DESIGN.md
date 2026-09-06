@@ -590,6 +590,12 @@ renders hollow (white fill, zone ring); leased out drops to 45% opacity. Cluster
 15/19/24px by point count and go white with ink text when their members span more than one
 zone.
 
+**The grouping radius is in pixels, so it is tied to the opening zoom.** It buys a distance
+on the ground only at one zoom level, and changing where the map opens silently changes
+what it does: fitting the view to the listings put it three times closer than the radius
+had been chosen for, which split one corridor into two same-coloured bubbles reading "2"
+and "11" beside a tray that said 13. Retune it whenever the opening view moves.
+
 ### Dialog
 
 Native `<dialog>` so the browser owns focus trapping, Esc and inertness. 16px radius, solid

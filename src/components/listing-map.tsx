@@ -169,9 +169,18 @@ export default function ListingMap({
       type: "geojson",
       data: toGeoJson(listingsRef.current),
       cluster: listingsRef.current.filter((l) => l.lat !== null).length > 40,
-      // Tight enough that Bhosari, Nigdi, Hinjawadi and Pirangut separate at the
-      // default Pune view instead of merging into one colourless group.
-      clusterRadius: 22,
+      /*
+        The radius is in pixels, so it means a different distance on the ground
+        at every zoom. 22 was set when the map opened on the whole of
+        Maharashtra; opening fitted to the listings is roughly three times
+        closer, which left 22px covering about a third of the ground it was
+        chosen for and split one MIDC into two same-coloured bubbles - a "2"
+        sitting on an "11" where the tray said 13.
+
+        44 restores about the same reach on the ground, so a corridor stays one
+        group while Bhosari, Nigdi, Hinjawadi and Pirangut still separate.
+      */
+      clusterRadius: 44,
       clusterMaxZoom: 12,
       // One tally per zone, so a cluster knows whether it is all one cluster.
       clusterProperties: CLUSTER_TALLIES,
