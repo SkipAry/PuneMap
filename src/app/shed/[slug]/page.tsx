@@ -129,7 +129,13 @@ export default async function ShedPage({ params }: Params) {
     additionalProperty: rows
       .filter((r) => r.value !== DASH)
       .map((r) => ({ "@type": "PropertyValue", name: r.label, value: r.value })),
-    ...(listing.source_url ? { isBasedOn: listing.source_url } : {}),
+    /*
+      Never on a sample row. The scaffolding carries invented source URLs on
+      four real portals' domains - every one of them 404s - so publishing them
+      as isBasedOn told search engines that a fabricated listing came from a
+      specific page on someone else's site. Real listings still attribute.
+    */
+    ...(listing.source_url && !sample ? { isBasedOn: listing.source_url } : {}),
   };
 
   return (
@@ -304,7 +310,7 @@ export default async function ShedPage({ params }: Params) {
             ) : (
               <span className="text-base text-muted">{DASH}</span>
             )}
-            {listing.source_url ? (
+            {listing.source_url && !sample ? (
               <a
                 href={listing.source_url}
                 rel="noopener nofollow"
@@ -316,8 +322,11 @@ export default async function ShedPage({ params }: Params) {
             ) : null}
           </div>
           <p className="label mt-2 max-w-[70ch]">
-            This entry restructures a publicly posted listing. The original is linked above and
-            remains the broker&rsquo;s.
+            {sample
+              ? "Placeholder data. It restructures no one's listing, so there is nothing to credit."
+              : listing.source_url
+                ? "This entry restructures a publicly posted listing. The original is linked above and remains the broker's."
+                : "This entry restructures a publicly posted listing, which remains the broker's. The original is not recorded."}
           </p>
         </section>
 

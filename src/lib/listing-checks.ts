@@ -91,6 +91,20 @@ export function checkListings(
     // Every listing restructures someone else's posting and has to credit it.
     if (!allowSampleData && !l.source_url) at("no source_url - the original posting must be linked");
 
+    /*
+      A scaffolding row must not name a real portal as its source. The seed
+      data carried invented URLs on 99acres, MagicBricks, RealEstateIndia and
+      SquareYards - all of them 404 - and they reached production inside the
+      listing pages' structured data, telling search engines that a made-up
+      shed came from a specific page on someone else's site. Invented phone
+      numbers were given the non-allocatable +91555 prefix precisely so they
+      could not reach a real person; source URLs were never given the same
+      care, so this rule is that care.
+    */
+    if (l.broker_phone?.startsWith(SAMPLE_PHONE_PREFIX) && l.source_url) {
+      at(`sample row cites a real domain as its source: ${l.source_url}`);
+    }
+
     if (l.broker_phone) {
       if (!allowSampleData && l.broker_phone.startsWith(SAMPLE_PHONE_PREFIX))
         at("still carries a placeholder phone number");
