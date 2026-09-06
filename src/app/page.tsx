@@ -85,6 +85,32 @@ export default async function LandingPage() {
 
   const noCrane = live.filter((l) => l.crane_capacity_ton === null).length;
 
+  /*
+    How often each spec is actually stated, in the fixed spec order the rest of
+    the site uses. This is the section's own claim measured rather than
+    asserted: every one of these gaps is an em dash on a card somewhere.
+  */
+  const coverage: { label: string; n: number }[] = [
+    { label: "Clear height", n: live.filter((l) => l.height_m !== null).length },
+    { label: "Crane capacity", n: live.filter((l) => l.crane_capacity_ton !== null).length },
+    { label: "Sanctioned power", n: live.filter((l) => l.power_hp !== null).length },
+    { label: "Docks", n: live.filter((l) => l.docks !== null).length },
+    { label: "Flooring", n: live.filter((l) => l.flooring !== null).length },
+    { label: "Floor load", n: live.filter((l) => l.floor_load_mt !== null).length },
+  ];
+
+  /* Read off the submission form: four required fields, everything else not. */
+  const intake: { label: string; need: "required" | "optional" }[] = [
+    { label: "Your name", need: "required" },
+    { label: "Phone", need: "required" },
+    { label: "Cluster", need: "required" },
+    { label: "Property type", need: "required" },
+    { label: "Locality", need: "optional" },
+    { label: "Every spec", need: "optional" },
+    { label: "Rent", need: "optional" },
+    { label: "Email", need: "optional" },
+  ];
+
   // "Other" is the catch-all bucket for a listing outside the named corridors,
   // not a place anyone drives to, so it is not coverage to advertise.
   const counts = await railCounts();
@@ -268,14 +294,22 @@ export default async function LandingPage() {
 
         {/* ── 02 The null contract: the trust argument. ── */}
         <section className="sec">
-          <div className="wrap grid gap-8 md:grid-cols-[1fr_18rem] md:items-start md:gap-12">
+          <div className="wrap grid gap-8 md:grid-cols-[1fr_22rem] md:items-start md:gap-12">
             <div>
               <Marker n="02">Unstated is not zero</Marker>
               <div className="mt-4 flex max-w-[62ch] flex-col gap-4 text-base">
+                {/*
+                  Written against the table beside it, not against the general
+                  claim that broker listings are half-empty: with the coverage
+                  measured and on screen, "half-empty" is contradicted by its
+                  own evidence. Uneven, and thinnest where it counts, is both
+                  true here and the sharper point.
+                */}
                 <p>
-                  Real broker listings are half-empty, and that is the normal case rather
-                  than an edge one. Of the {live.length} buildings on the site right now,{" "}
-                  <span className="num">{noCrane}</span> say nothing at all about a crane.
+                  Coverage is uneven, and it thins out exactly where it decides a deal.
+                  Of the {live.length} buildings on the site right now,{" "}
+                  <span className="num">{noCrane}</span> say nothing at all about a crane —
+                  the one spec a heavy-engineering tenant cannot compromise on.
                 </p>
                 <p>
                   A shed that never mentions a crane is not a match for a 10-ton
@@ -292,26 +326,43 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Given a card and a caption rather than left as a bare two-cell
-                strip: alone in an 18rem column it read as something that had
-                come loose from the paragraph beside it. */}
-            <figure className="card self-center p-4">
-              <dl className="spec-strip !grid-cols-2">
-              <div className="spec-cell">
-                <dd className="num spec-value">10T</dd>
-                <dt className="label mt-0.5">stated</dt>
-              </div>
-                <div className="spec-cell">
-                  <dd className="num spec-value" data-unknown="true">
-                    —
-                  </dd>
-                  <dt className="label mt-0.5">not stated</dt>
-                </div>
-              </dl>
-              <figcaption className="label mt-3 max-w-[24ch]">
-                The same field, answered and unanswered. Never{" "}
-                <span className="num text-ink">0</span>.
+            {/*
+              The claim beside this, counted. Every bar that falls short is a
+              column of em dashes somewhere in the listings, which is why the
+              figure belongs here rather than a restatement of the sentence.
+            */}
+            <figure className="card self-start p-4">
+              <figcaption className="label uppercase tracking-[0.12em]">
+                What the listings state
               </figcaption>
+
+              <dl className="mt-3 flex flex-col gap-2.5">
+                {coverage.map((c) => (
+                  <div key={c.label}>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <dt className="text-sm">{c.label}</dt>
+                      <dd className="num text-sm">
+                        {c.n}
+                        <span className="font-medium text-muted"> of {live.length}</span>
+                      </dd>
+                    </div>
+                    <div
+                      className="mt-1 h-1 overflow-hidden rounded-full bg-[rgba(16,24,40,0.08)]"
+                      aria-hidden="true"
+                    >
+                      <div
+                        className="h-full rounded-full bg-action"
+                        style={{ width: `${Math.round((c.n / live.length) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </dl>
+
+              <p className="label mt-3.5 border-t border-line pt-3">
+                Every gap here renders as <span className="num text-ink">—</span>, never as{" "}
+                <span className="num text-ink">0</span>.
+              </p>
             </figure>
           </div>
         </section>
@@ -345,10 +396,11 @@ export default async function LandingPage() {
 
         {/* ── 04 How the business runs. Investors and brokers read this one. ── */}
         <section className="sec">
-          <div className="wrap">
+          <div className="wrap grid gap-8 md:grid-cols-[1fr_22rem] md:items-start md:gap-12">
+            <div>
             <Marker n="04">How it works</Marker>
 
-            <dl className="rule-list mt-6 max-w-[62ch] border-t border-line">
+            <dl className="rule-list mt-6 border-t border-line">
               {[
                 {
                   t: "Listing is free",
@@ -373,6 +425,40 @@ export default async function LandingPage() {
                 </div>
               ))}
             </dl>
+            </div>
+
+            {/*
+              The rules on the left say listing is free and incomplete is fine.
+              This is that policy as the form actually enforces it: four fields
+              to submit a property, and nothing about the building among them.
+            */}
+            <figure className="card self-start p-4">
+              <figcaption className="label uppercase tracking-[0.12em]">
+                What a listing needs
+              </figcaption>
+
+              <dl className="rule-list mt-3">
+                {intake.map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-baseline justify-between gap-3 py-2"
+                  >
+                    <dt className="text-sm">{row.label}</dt>
+                    <dd
+                      className={`label ${
+                        row.need === "required" ? "text-ink" : "text-faint"
+                      }`}
+                    >
+                      {row.need}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <p className="label mt-3.5 border-t border-line pt-3">
+                Four fields, none of them about the building.
+              </p>
+            </figure>
           </div>
         </section>
 
