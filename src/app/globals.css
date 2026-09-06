@@ -143,6 +143,21 @@
     color: var(--color-faint);
   }
 
+  /*
+    At 360px five cells leave ~44px for a value, and "200HP" wants 48. The
+    strip must stay readable there rather than ellipsing a spec, so the cell
+    gives up padding and the figure drops one step. It never drops a cell.
+  */
+  @media (max-width: 390px) {
+    .spec-cell {
+      padding-inline: 4px;
+    }
+
+    .spec-value {
+      font-size: var(--text-sm);
+    }
+  }
+
   /* Controls are pill-shaped like estate signage, not boxes. */
   .chip {
     display: inline-flex;
@@ -346,8 +361,26 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* Holds the band at 60px whether or not it carries the search field. */
+  min-height: 42px;
   max-width: 80rem;
   margin-inline: auto;
+}
+
+/*
+  The same band on a document page. It sticks rather than floats - there is no
+  territory under it to keep in view - and it spans rather than centring, so
+  its tiles line up with the column beneath them instead of hanging inboard.
+*/
+.toolbar--doc {
+  position: sticky;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+}
+
+.toolbar--doc .toolbar-inner {
+  max-width: none;
 }
 
 @media (min-width: 640px) {
@@ -951,6 +984,14 @@ dialog.drawer[open]::backdrop {
 .result-card {
   transition: opacity 120ms linear;
   min-height: 148px;
+  /*
+    A grid item may not shrink below its min-content by default, and a card's
+    min-content is ~350px: five nowrap spec cells and a locality line. In a
+    single-column grid on a 414px phone that resolved the track to 399px inside
+    a 367px container and pushed the page sideways. The strip is built to clip
+    with an ellipsis, so it is allowed to.
+  */
+  min-width: 0;
 }
 
 .result-card[data-leaving="true"] {
