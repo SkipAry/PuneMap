@@ -93,16 +93,8 @@ export default async function LandingPage() {
     <div className="bg-white">
       <header className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur">
         <div className="wrap flex items-center gap-3" style={{ height: "var(--topbar-h)" }}>
-          <span className="flex min-w-0 items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="grid size-7 flex-none place-content-center rounded-lg bg-ink text-[13px] font-bold text-white"
-            >
-              P
-            </span>
-            <span className="truncate text-base font-bold tracking-tight">
-              Pune Industrial Space
-            </span>
+          <span className="truncate text-base font-bold tracking-tight">
+            Pune Industrial Space
           </span>
 
           <nav className="ms-auto flex items-center gap-2">

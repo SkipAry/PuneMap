@@ -1,5 +1,4 @@
 import { AddSpaceForm } from "@/components/add-space-form";
-import { SearchRail } from "@/components/search-rail";
 import { SiteHeader } from "@/components/site-header";
 import { railCounts } from "@/lib/rail-counts";
 import { addressed } from "@/lib/site-url";
@@ -20,18 +19,13 @@ export default async function ListYourSpacePage() {
 
   return (
     <>
-      <div className="panel:hidden">
-        <SiteHeader subtitle="List your space" />
-      </div>
+      <SiteHeader subtitle="List your space" counts={clusterCounts} active="list" />
 
-      <div className="shell shell--reading panel:fixed panel:inset-0 panel:overflow-hidden">
-        <SearchRail active="list" counts={clusterCounts} />
-
-        <main
-          id="main"
-          tabIndex={-1}
-          className="detail-col mx-auto max-w-3xl px-4 py-8 panel:px-8 panel:py-10"
-        >
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10"
+      >
         <h1 className="text-3xl">List your space, free</h1>
         <p className="mt-3 max-w-[62ch] text-base text-muted">
           There is no listing fee and no account to create. We are paid brokerage by the
@@ -55,8 +49,7 @@ export default async function ListYourSpacePage() {
         <div className="panel mt-6 !bg-white pt-5">
           <AddSpaceForm />
         </div>
-        </main>
-      </div>
+      </main>
     </>
   );
 }

@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 
 import { SearchShell } from "@/components/search-shell";
-import { SiteHeader } from "@/components/site-header";
 import { getListings } from "@/lib/data";
 import { addressed } from "@/lib/site-url";
 
@@ -18,26 +17,18 @@ export default async function SearchPage() {
   const listings = await getListings();
 
   return (
-    <>
-      {/* Phone only: from 820px the rail carries identity and navigation, and a
-          floating bar on top of it would be a second masthead. */}
-      <div className="panel:hidden">
-        <SiteHeader
-          subtitle="Sheds, warehouses and factory buildings on rent around Pune"
-          floating
-        />
-      </div>
-      <main id="main" tabIndex={-1}>
-        {/* The page had no h1 and no landmark: the accessibility tree opened on
-            the filter group names. Visually redundant with the masthead, so it
-            is carried for assistive tech only. */}
-        <h1 className="sr-only">
-          Industrial sheds, warehouses and factory buildings on rent around Pune
-        </h1>
-        <Suspense fallback={<div className="p-4 text-sm text-muted">Loading listings…</div>}>
-          <SearchShell all={listings} />
-        </Suspense>
-      </main>
-    </>
+    <main id="main" tabIndex={-1}>
+      {/* The page had no h1 and no landmark: the accessibility tree opened on
+          the filter group names. Visually redundant with the masthead, so it
+          is carried for assistive tech only. */}
+      <h1 className="sr-only">
+        Industrial sheds, warehouses and factory buildings on rent around Pune
+      </h1>
+      <Suspense fallback={<div className="p-4 text-sm text-muted">Loading listings…</div>}>
+        {/* The shell owns the masthead: its menu toggles cluster filters, which
+            only the client tree can wire up. */}
+        <SearchShell all={listings} />
+      </Suspense>
+    </main>
   );
 }

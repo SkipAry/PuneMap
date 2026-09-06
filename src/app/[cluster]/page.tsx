@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ListingCard, SampleNotice } from "@/components/listing-card";
-import { SearchRail } from "@/components/search-rail";
 import { railCounts } from "@/lib/rail-counts";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
@@ -89,14 +88,9 @@ export default async function ClusterPage({ params }: Params) {
 
   return (
     <>
-      {/* Phone only: from 820px the rail carries identity and navigation. */}
-      <div className="panel:hidden">
-        <SiteHeader subtitle={`${cluster} · ${rows.length} available`} />
-      </div>
+      <SiteHeader subtitle={`${cluster} · ${rows.length} available`} counts={clusterCounts} />
 
-      <div className="shell shell--detail panel:fixed panel:inset-0 panel:overflow-hidden">
-        <SearchRail counts={clusterCounts} />
-
+      <div className="shell shell--detail">
         <main
           id="main"
           tabIndex={-1}

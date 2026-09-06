@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { SearchRail } from "@/components/search-rail";
 import { SiteHeader } from "@/components/site-header";
 import { railCounts } from "@/lib/rail-counts";
 import {
@@ -41,18 +40,13 @@ export default async function PrivacyPage() {
 
   return (
     <>
-      <div className="panel:hidden">
-        <SiteHeader subtitle="Privacy" />
-      </div>
+      <SiteHeader subtitle="Privacy" counts={clusterCounts} />
 
-      <div className="shell shell--reading panel:fixed panel:inset-0 panel:overflow-hidden">
-        <SearchRail counts={clusterCounts} />
-
-        <main
-          id="main"
-          tabIndex={-1}
-          className="detail-col mx-auto max-w-3xl px-4 py-8 panel:px-8 panel:py-10"
-        >
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10"
+      >
         <h1 className="text-3xl">What we collect, and why</h1>
 
         {!OPERATOR_READY ? (
@@ -169,8 +163,7 @@ export default async function PrivacyPage() {
         </Section>
 
         <p className="label mt-8">Last updated {POLICY_UPDATED}</p>
-        </main>
-      </div>
+      </main>
     </>
   );
 }

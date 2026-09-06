@@ -350,79 +350,57 @@
 }
 
 /*
-  From 820px the screen becomes three panes with hard edges - navigation rail,
-  working column, map - rather than a map with panels floating on it. Panels
-  over a map cost the map the area they cover and can hide their own controls;
-  panes cannot. The map keeps floating controls because they belong to the map.
+  The map is the ground at every width. From 820px the result column stops
+  being a sheet across the bottom and becomes a full-height panel down the
+  left, leaving the rest of the territory uncovered - the arrangement a maps
+  app uses, and the reason navigation is a drawer rather than a standing rail.
 */
 @media (min-width: 820px) {
   :root {
-    --rail-w: 244px;
-    --col-w: 372px;
-  }
-
-  .shell {
-    display: grid;
-    grid-template-columns: var(--rail-w) var(--col-w) 1fr;
-  }
-
-  /* The map stops being the ground and becomes the third pane. */
-  .shell-map {
-    position: relative;
-    inset: auto;
+    --col-w: 366px;
   }
 
   .results-dock,
   .results-dock[data-open="false"],
   .results-dock[data-open="true"] {
-    position: static;
-    inset: auto;
-    width: auto;
+    left: 0.75rem;
+    right: auto;
+    width: var(--col-w);
+    /* Clears the floating masthead rather than sliding under it. */
+    top: calc(var(--topbar-h) + 1.25rem);
+    bottom: 0.75rem;
     max-height: none;
-    border-radius: 0;
-    border-right: 1px solid var(--color-line);
-    background: var(--color-surface);
-    box-shadow: none;
-    backdrop-filter: none;
+    border-radius: var(--radius-panel);
   }
 }
 
 @media (min-width: 1180px) {
   :root {
-    --col-w: 404px;
+    --col-w: 398px;
   }
 }
 
 /*
-  A listing reads in the same three panes, with a wider middle: a spec table
-  needs more measure than a result row, and the locator holds the third pane so
-  the page still renders with no JavaScript.
+  A listing reads as a document with the locator beside it: the text column
+  scrolls, the locator stays put. Sticky rather than a fixed pane, so the
+  masthead stays where it is and the page keeps ordinary document scrolling.
 */
 @media (min-width: 820px) {
   .shell--detail {
-    grid-template-columns: var(--rail-w) minmax(420px, 30rem) 1fr;
+    display: grid;
+    grid-template-columns: minmax(420px, 34rem) 1fr;
+    align-items: start;
   }
 
-  .detail-col {
-    overflow-y: auto;
+  .shell--detail .detail-col {
     border-right: 1px solid var(--color-line);
-  }
-
-  /* A reading page has no third pane, so the column keeps its own measure
-     rather than stretching a paragraph across the whole window. */
-  .shell--reading {
-    grid-template-columns: var(--rail-w) minmax(0, 1fr);
-  }
-
-  .shell--reading .detail-col {
-    max-width: 46rem;
-    /* Centred in its track: held to a measure but left-aligned, the page reads
-       as a column with a hole beside it rather than as a page. */
-    margin-inline: auto;
+    min-height: calc(100dvh - var(--topbar-h));
   }
 
   .detail-map {
-    position: relative;
+    position: sticky;
+    top: var(--topbar-h);
+    height: calc(100dvh - var(--topbar-h));
     background: var(--color-ground);
     padding: 1.25rem;
   }
@@ -433,28 +411,89 @@
 }
 
 /*
-  The navigation rail. Clusters live here permanently rather than as chips
-  floating over the map: as chips they could be covered by the result panel,
-  and two of the nine regularly were.
+  Sections and clusters, off-canvas until asked for. They were a standing
+  244px rail, which spent a quarter of every wide screen on navigation nobody
+  was using and pushed the map into a corner.
+
+  A native <dialog> brings focus trapping, Esc and inertness with it. The
+  slide is a transform with allow-discrete on display, so it animates both
+  ways without any JavaScript owning the state.
 */
-/*
-  Hidden below the three-pane breakpoint in CSS, not with a utility: .rail is
-  unlayered and would win over Tailwind's layered `hidden`, leaving the rail on
-  a phone.
-*/
-.rail {
-  display: none;
-  flex-direction: column;
+dialog.drawer {
+  /* Pinned to the inline start: auto on one side only, rather than centred. */
+  margin: 0 auto 0 0;
+  width: min(300px, 86vw);
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: 0;
+  border: 0;
+  border-inline-end: 1px solid var(--color-line);
   background: #fbfbfa;
-  border-right: 1px solid var(--color-line);
-  padding: 0.875rem 0.625rem;
+  color: var(--color-ink);
+  box-shadow: 0 24px 64px rgba(16, 24, 40, 0.24);
   overflow: hidden;
+  transform: translateX(-100%);
+  transition:
+    transform 240ms cubic-bezier(0.32, 0.72, 0, 1),
+    overlay 240ms allow-discrete,
+    display 240ms allow-discrete;
 }
 
-@media (min-width: 820px) {
-  .rail {
-    display: flex;
+/*
+  The filter set is the same off-canvas drawer, just wider: it holds controls
+  rather than a list of links, and it arrives from the same edge as the menu so
+  there is one place things slide in from.
+*/
+dialog.drawer--wide {
+  width: min(420px, 92vw);
+  background: var(--color-surface);
+}
+
+dialog.drawer[open] {
+  transform: translateX(0);
+}
+
+@starting-style {
+  dialog.drawer[open] {
+    transform: translateX(-100%);
   }
+}
+
+dialog.drawer::backdrop {
+  background: rgba(16, 24, 40, 0.4);
+  opacity: 0;
+  transition:
+    opacity 240ms ease,
+    overlay 240ms allow-discrete,
+    display 240ms allow-discrete;
+}
+
+dialog.drawer[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog.drawer[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* A bare icon control: the menu button, and the drawer's own close. */
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: rgba(16, 24, 40, 0.06);
 }
 
 .rail-link {
@@ -544,49 +583,87 @@
 .dial {
   border: 1px solid var(--color-line-strong);
   border-radius: 10px;
-  padding: 0.5rem 0.625rem 0.5625rem;
+  padding: 0.4375rem 0.5625rem 0.5rem;
   background: var(--color-surface);
   text-align: start;
+  /* A dial is ~110px wide and its value never wraps, so anything unexpectedly
+     long is clipped by the housing rather than escaping it. */
+  overflow: hidden;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
 }
 
 .dial:hover {
-  border-color: var(--color-action);
+  border-color: var(--color-ink);
 }
 
+/* Set reads as a filled state, not as a second border drawn inside the first. */
 .dial[data-set="true"] {
   border-color: var(--color-action);
-  box-shadow: inset 0 0 0 1px var(--color-action);
+  background: color-mix(in srgb, var(--color-action) 5%, #fff);
 }
 
 .dial .k {
-  display: block;
+  display: flex;
+  align-items: center;
   font-size: 0.65625rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
+.dial[data-set="true"] .k {
+  color: var(--color-action);
+}
+
+/* The chevron is the affordance. Without it, six boxes read as readouts
+   rather than as the controls they are. */
+.dial .k::after {
+  content: "";
+  margin-inline-start: auto;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+  opacity: 0.5;
+}
+
 .dial .v {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 1.375rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.125rem;
+  margin-top: 0.3125rem;
+  /* Held so a set and an unset dial are the same height and the bank of them
+     does not jump as constraints go on and off. */
+  min-height: 1.375rem;
+  font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.025em;
-  line-height: 1;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dial .v .u {
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--color-muted);
-  margin-inline-start: 0.125rem;
 }
 
-.dial[data-set="false"] .v {
-  color: var(--color-faint);
+/*
+  Unset does not say "Any" six times over. It shows what the listings actually
+  span on that spec, in the weight of a hint rather than of a value - so an
+  untouched requirement block is still telling the reader something.
+*/
+.dial[data-set="false"] .v,
+.dial[data-set="false"] .v .u {
+  font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-faint);
 }
 
 /*

@@ -1,6 +1,6 @@
 ---
 name: Pune Industrial Space
-description: A map-first search tool for Pune industrial buildings, signed like an industrial estate.
+description: A map-first search tool for Pune industrial buildings, where every other surface is summoned rather than standing, fronted by a numbered document that argues for it.
 colors:
   ink: "#101828"
   muted: "#5d6775"
@@ -8,6 +8,7 @@ colors:
   action: "#1862dc"
   ground: "#eef1f5"
   surface: "#ffffff"
+  rail: "#fbfbfa"
   panel: "rgba(255, 255, 255, 0.94)"
   line: "rgba(16, 24, 40, 0.08)"
   line-strong: "rgba(16, 24, 40, 0.16)"
@@ -25,12 +26,24 @@ colors:
   zone-pirangut: "#3e9e5a"
   zone-other: "#7a8290"
 typography:
+  hero:
+    fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
+    fontSize: "clamp(2.125rem, 5.4vw, 3.5rem)"
+    fontWeight: 700
+    lineHeight: 1.03
+    letterSpacing: "-0.032em"
   display:
     fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
     fontSize: "2.25rem"
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "-0.018em"
+  lede:
+    fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
+    fontSize: "clamp(1rem, 1.4vw, 1.125rem)"
+    fontWeight: 400
+    lineHeight: 1.55
+    letterSpacing: "normal"
   title:
     fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
     fontSize: "1.125rem"
@@ -50,6 +63,13 @@ typography:
     lineHeight: 1.2
     letterSpacing: "-0.01em"
     fontFeature: "tabular-nums"
+  readout:
+    fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
+    fontSize: "1.375rem"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.025em"
+    fontFeature: "tabular-nums"
   control:
     fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
     fontSize: "0.8125rem"
@@ -62,6 +82,13 @@ typography:
     fontWeight: 500
     lineHeight: 1.25
     letterSpacing: "0.01em"
+  key:
+    fontFamily: "Google Sans, Google Sans Text, system-ui, sans-serif"
+    fontSize: "0.65625rem"
+    fontWeight: 500
+    lineHeight: 1.25
+    letterSpacing: "0.05em"
+    textTransform: "uppercase"
 rounded:
   mark: "5px"
   tile: "8px"
@@ -75,12 +102,56 @@ spacing:
   sm: "12px"
   md: "16px"
   lg: "24px"
+layout:
+  breakpoint-panel: "820px"
+  breakpoint-wide: "1180px"
+  col-w: "366px"
+  col-w-wide: "398px"
+  drawer-w: "min(300px, 86vw)"
+  drawer-w-wide: "min(420px, 92vw)"
+  detail-col: "minmax(420px, 34rem)"
+  reading-measure: "48rem"
+  landing-wrap: "68rem"
+  topbar-h: "60px"
 components:
   panel:
     backgroundColor: "{colors.panel}"
     textColor: "{colors.ink}"
     rounded: "{rounded.panel}"
     padding: "0"
+  drawer:
+    backgroundColor: "{colors.rail}"
+    textColor: "{colors.ink}"
+    rounded: "0"
+    padding: "10px"
+    width: "{layout.drawer-w}"
+  drawer-wide:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "0"
+    padding: "0"
+    width: "{layout.drawer-w-wide}"
+  icon-btn:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "9px"
+    height: "34px"
+    width: "34px"
+  rail-link:
+    textColor: "{colors.ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.tile}"
+    padding: "7px 8px"
+  cluster-row:
+    textColor: "{colors.ink}"
+    rounded: "{rounded.tile}"
+    padding: "6px 8px"
+  dial:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.readout}"
+    rounded: "{rounded.control}"
+    padding: "8px 10px 9px"
   card:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -131,38 +202,55 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Estate Wayfinding System"**
+**Creative North Star: "Territory First"**
 
-An industrial estate does two things to make itself navigable. It signs its zones by
-colour, so you find your corridor before you read a word. And it hangs those signs *over*
-the territory rather than printing a map on a board somewhere else.
+The map is the territory and it holds the whole screen. Every other surface is summoned:
+it arrives when the user asks for it, does one job, and leaves. Nothing stands on screen
+holding ground it is not using.
 
-Both are literal here. The map is the page — not a panel in a three-column shell, but the
-ground everything else floats on. Each of the eight clusters owns a hue, and that hue
-appears identically on the map pin, the filter chip, the card dot and the cluster page, so
-"Chakan is amber" is learned once and then read everywhere without a legend.
+That is the whole layout rule. The map is full-bleed at every width. The result column
+floats on it — a bottom sheet on a phone, a full-height panel down the left from 820px,
+never more than about a third of the width. Sections and clusters live off-canvas in a
+drawer behind one button. The filter set lives off-canvas in a second, wider drawer that
+slides in from the same edge. Both are native `<dialog>` elements, so the browser owns
+focus trapping, Esc and inertness, and both animate with a transform rather than with
+JavaScript holding the state.
 
-The register is **colourful, minimal and friendly**: saturated zone hues doing real work,
-one blue for actions, and otherwise a near-white ground that stays out of the way. Colour
-is never decoration in this system. Every hue on screen is either a zone or an action, and
-if a mark cannot say which of those it is, it should not be coloured.
+This replaced a standing 244px navigation rail. The rail was legible and it was always
+there, which was the problem: it spent a quarter of every wide screen on navigation
+almost nobody was using, and pushed the map — the thing being read — into a corner.
+
+The requirement is the exception to summoning. Six dials sit pinned at the top of the
+result column and do not scroll away with the results they produce, because the filter is
+the product and the product should not be able to leave the screen.
+
+`/` is the one surface that is not the tool. It is a numbered document that argues for
+the tool, and it argues by running the real filter over the real listings rather than by
+describing what the filter would do.
+
+The colour system is unchanged and is still the wayfinding move: each cluster owns a hue,
+used identically on the map pin, the drawer row, the card dot and the cluster page, so
+"Chakan is amber" is learned once and read everywhere without a legend.
 
 **Key Characteristics:**
 
-- Full-bleed map; every other surface is a floating sign panel
-- Nine zone hues carrying cluster identity across map, chips, cards and pages
+- Full-bleed map at every width; the result column floats on it, left and full height
+- Navigation and filters are drawers that slide from the same edge, never standing chrome
+- The requirement is pinned above the results, never scrolled with them
+- An unset dial shows the range the listings actually span, never the word "Any"
+- Nine zone hues carrying cluster identity across map, drawer, cards and pages
 - One action blue (#1862dc) for controls, never for identity
-- Translucent white panels at 94% with a 14px backdrop blur
-- Pill-shaped controls; 14–16px radii on cards and panels
-- Tabular figures on every comparable number
+- Tabular figures on every comparable number, in fixed cells that never reorder
+- A wordmark and no monogram — the name is the mark
+- A landing page built as a numbered spec document, with live figures in it
 
 ## Colors
 
 ### Primary
 
 - **Action Blue** (`#1862dc`): Every control the user can press — the Add-space button,
-  Include-them, the focus ring, slider handles, checked boxes. It marks *what you can do*,
-  never *what a thing is*.
+  Include-them, the focus ring, slider handles, checked boxes, a set dial's border. It
+  marks *what you can do*, never *what a thing is*.
 
 ### Secondary
 
@@ -181,14 +269,20 @@ They live in `src/lib/clusters.ts` and are mirrored nowhere else.
 - **Muted** (`#5d6775`): Secondary text and labels. Darkened from #667085, which cleared
   4.5:1 on white but only reached 4.39 on the Ground the reading pages sit on.
 - **Faint** (`#98a2b3`): Unstated values and placeholders — visibly weaker than real data.
-- **Ground** (`#eef1f5`): The page behind everything, and the map fallback.
-- **Panel** (white at 94%): Every floating surface, over a 14px blur.
+- **Surface** (`#ffffff`): The paper a surface is printed on. Cards, dials, the result
+  column, the filter drawer, inputs.
+- **Ground** (`#eef1f5`): The page behind everything, the map fallback, and the bed the
+  locator column sits on.
+- **Rail** (`#fbfbfa`): The menu drawer only - a half-step off Surface, so the drawer reads
+  as a different kind of surface from the column it slid over.
+- **Panel** (white at 94%): Surfaces that genuinely float, over a 14px blur. On a phone
+  that is the sheet and the header; on a wide screen it is only the map's own controls.
 - **Line** / **Line-strong** (ink at 8% / 16%): Borders and dividers.
 
 ### Named Rules
 
 **The Zone Rule.** A cluster owns a hue and carries it identically on the map pin, the
-filter chip, the card dot and its own page. Availability never takes a hue — it rides the
+drawer row, the card dot and its own page. Availability never takes a hue — it rides the
 pin's ring (solid, hollow for built-to-suit, faded for leased out) so both encodings share
 one pin without fighting.
 
@@ -210,14 +304,21 @@ which is what an estate is actually labelled with.
 
 ### Hierarchy
 
+- **Hero** (700, clamp 34→56px, 1.03, −0.032em): The landing headline. The only type on
+  the site that goes past the app scale, and it exists on one surface.
 - **Display** (700, 36px, 1.15, −0.018em): Page titles on reading pages.
+- **Lede** (400, clamp 16→18px, 1.55, muted): The paragraph under a landing heading.
 - **Title** (700, 18px): Card headlines and dialog headings.
 - **Body** (400, 15px, 1.5, max ~62ch): Prose.
 - **Numeric** (600, 15px, tabular-nums): Every comparable number.
+- **Readout** (700, 22px, tabular-nums, −0.025em): A dial's value. Its unit rides along at
+  11px in Muted, so the number keeps the weight and the unit does not compete.
 - **Control** (500, 13px): Chips, buttons, segmented controls.
 - **Label** (500, 11px, +0.01em, muted): Spec labels and metadata. Sentence case.
+- **Key** (500, 10.5px, +0.05em, uppercase, muted): The one uppercase tier, reserved for a
+  dial's name and a landing panel's header — a legend engraved on a housing, not a heading.
 
-Scale: 11 / 13 / 15 / 18 / 22 / 28 / 36.
+App scale: 11 / 13 / 15 / 18 / 22 / 28 / 36.
 
 ### Named Rules
 
@@ -225,23 +326,63 @@ Scale: 11 / 13 / 15 / 18 / 22 / 28 / 36.
 `font-variant-numeric: tabular-nums`. Proportional figures break the vertical scan, which
 is the one thing this interface exists to support.
 
-**The Sentence Case Rule.** Labels are sentence case. Never uppercase, never letterspaced
-small caps, never monospace standing in for "technical".
+**The Sentence Case Rule.** Labels are sentence case. The Key tier is the single exception
+and it is not a heading — it names a control, the way a legend is engraved beside a gauge.
+Never letterspaced small caps, never monospace standing in for "technical".
+
+**The Measure Belongs To The Text Rule.** A `ch` measure is set on the element that
+carries the font size, never on a wrapper. `max-w-[24ch]` on a 15px div around a 56px
+headline is a 192px column, which is how the landing hero first shipped and had to be
+fixed.
 
 ## Layout
 
-`/` is full-bleed: the map fills the viewport and everything floats on it. A 60px top bar
-inset 12px, a 390px result panel inset right, the zone legend centred along the bottom,
-and the basemap switch bottom-left. Below `lg` the result panel becomes a bottom sheet
-starting at 46% height, so the territory stays visible; it collapses to a 3.5rem handle.
+### The search screen
 
-Reading pages (`/shed/[slug]`, `/[cluster]`, `/about`, `/list-your-space`) use a solid
-sticky header and a centred column on the ground colour.
+The map is `absolute inset-0` at every width. The masthead floats on it, inset 12px. The
+result column floats below the masthead:
+
+- **From 820px** (`--breakpoint-panel`, the only custom one, set at iPad portrait): down
+  the left at `left: 12px`, `top: calc(60px + 20px)`, `bottom: 12px`, 366px wide — 398px
+  from 1180px. Roughly two thirds of the window stays uncovered map.
+- **Below 820px**: a bottom sheet — a 3.5rem handle closed, `top: 46%` open — so the
+  territory stays visible either way.
+
+### The document pages
+
+A sticky solid masthead, then:
+
+- `.shell--detail` (`minmax(420px, 34rem) / 1fr`) — listing and cluster pages. The text
+  column scrolls with the document; the second column holds a static SVG locator that is
+  `position: sticky` under the masthead at `100dvh - 60px`. Sticky rather than a fixed
+  pane, so the page keeps ordinary document scrolling and the masthead stays put.
+- Reading pages — About, Privacy, List a property — are one centred column at its own
+  measure. No grid, no second pane: there is no map to put in one.
+
+The listing page grows a fixed call bar at the bottom below 768px, because the phone call
+is the conversion and it would otherwise sit below the entire specification.
+
+### The landing page
+
+`.wrap` is a 68rem measure with 1.25rem gutters. Sections are separated by a hairline and
+`clamp(2.75rem, 6vw, 4.5rem)` of vertical space — never by a tinted band. Each carries a
+two-digit marker (`01`, `02`, …) in Faint beside its heading, which is what makes the page
+read as a specification rather than as marketing. The hero is `1fr / 25rem` from 1024px
+and stacks below that.
 
 ### Named Rules
 
-**The Clear Centre Rule.** Panels hug the safe-area edges and the centre of the map stays
-clear. A panel must never sit over the pins a user is reading.
+**The Summoned Surface Rule.** If a surface is not being used right now, it is not on
+screen. Navigation and filters slide in on request and slide out again. The test is
+whether a first-time visitor would use it in their first ten seconds; the map and the
+result list pass, a list of section links does not.
+
+**The One Edge Rule.** Everything that slides, slides in from the inline start. Two
+drawers arriving from two different edges would make the user learn the interface twice.
+
+**The Pinned Requirement Rule.** The six dials sit above the result list and do not scroll
+with it. Every dial opens the full filter set at the group it names, so a value is never
+more than one press from being changed.
 
 **The Reserved Height Rule.** Result cards declare `min-height: 148px` so a filter change
 reflows without shifting the page. CLS on the search screen is 0 and must stay 0.
@@ -249,34 +390,50 @@ reflows without shifting the page. CLS on the search screen is 0 and must stay 0
 **The Text Equivalent Rule.** The result list is always present and never behind a tab on
 desktop — it is the map's accessible equivalent.
 
+**The Unlayered Cascade Rule.** `.call-bar` is shown and hidden with a plain media query,
+never with `md:hidden`. It is unlayered CSS and beats Tailwind's layered utilities, so the
+utility silently loses and the element stays on screen. The same trap took the old `.rail`
+twice before it was removed. When a component class and a utility disagree about the same property, delete the
+losing declaration rather than stacking an override on it.
+
 ## Elevation & Depth
 
-This system uses real depth, because panels genuinely float above a map and need to read
-that way. Two shadows only:
+This system uses real depth, because on the search screen everything genuinely does float
+above a map and needs to read that way. Two shadows only:
 
 ### Shadow Vocabulary
 
-- **Panel** (`0 8px 28px rgba(16,24,40,0.12), 0 1px 3px rgba(16,24,40,0.08)`): Any floating
-  sign panel, and a card on hover.
+- **Panel** (`0 8px 28px rgba(16,24,40,0.12), 0 1px 3px rgba(16,24,40,0.08)`): The result
+  column, the floating masthead, the map's own control cluster, and a card on hover.
 - **Raised** (`0 2px 8px rgba(16,24,40,0.1)`): Small controls that sit above a panel —
   action buttons, the active segment, slider handles.
 
-Panels also carry `backdrop-filter: blur(14px) saturate(1.4)`, which is what makes them
-read as glass over territory rather than as opaque boxes covering it.
+`backdrop-filter: blur(14px) saturate(1.4)` rides with Panel, which is what makes those
+surfaces read as glass over territory rather than as boxes covering it. Drawers are the
+exception: they are opaque and carry a deeper `0 24px 64px` shadow, because a drawer is
+not hovering over the map — it has come in front of the whole screen, and its backdrop
+says so.
+
+The document pages carry no shadow at all. A sticky masthead with a 1px underline and a
+column with a 1px border are the entire depth budget there.
 
 ### Named Rules
 
-**The Two Shadows Rule.** Panel and Raised are the entire vocabulary. A third shadow means
-a new elevation tier was invented rather than reused.
+**The Two Shadows Rule.** Panel and Raised are the entire vocabulary for floating
+surfaces. The drawer shadow is not a third tier — it belongs to the modal layer, with the
+backdrop that comes with it.
+
+**The Earned Float Rule.** Translucency and blur are for surfaces sitting over the map. A
+column in a document gets a border.
 
 ## Shapes
 
-Everything is generously rounded, because signage is:
-
 - **999px — controls.** Chips, buttons and segments are pills.
-- **16px — floating panels.** 14px — cards and map chrome. 10px — inputs. 8px — spec
-  tiles and the focus ring. 5px — the drawn checkbox mark, the one step small enough to
-  stay square-ish at 16px.
+- **16px — floating panels.** 14px — cards and map chrome. 10px — inputs and dials.
+  8px - spec tiles, drawer rows and the focus ring. 5px — the drawn checkbox mark, the one
+  step small enough to stay square-ish at 16px.
+- **0 - full-height surfaces.** A drawer and a document column have square corners. Only
+  something that floats free of an edge gets rounded.
 - Circles only for map pins and zone dots, which are data marks.
 
 Borders are 1px. The card is a plain rounded rectangle with **no coloured side border** —
@@ -292,10 +449,65 @@ down to 360px. An unstated spec occupies its slot with an em dash in Faint plus 
 `title="Not stated in the listing"` tooltip. Long values take short forms
 (`Plain RCC` → `RCC`) rather than reflowing the grid.
 
+### Dial (signature component)
+
+A bordered control: the spec name in Key with a chevron on the right, above the value in
+Readout with its unit at 11px. Set takes an Action Blue border, a 5% Action fill and an
+Action-coloured key — a filled state rather than a second border drawn inside the first.
+
+**Unset does not say "Any."** It shows the range the listings actually span on that spec —
+`6.5–18.0 m`, `0–40 T`, `7k–250k sq ft` — in Faint at 14px rather than in the 20px weight
+of a real value. Six dials all reading "Any" is a wall of placeholder that tells the
+reader nothing; six dials reading the shape of the inventory tell them what there is to
+ask for before they have asked anything. Area is compacted to thousands, because a dial is
+about 110px wide and "2,50,000" is not.
+
+Six in a 3×2 grid make the requirement block; three make the landing hero. Pressing one
+opens the filter drawer.
+
+### Menu drawer
+
+`min(300px, 86vw)`, full height, on the Rail colour, sliding in from the inline start.
+Wordmark and a close button, three section links, then every cluster with live stock as a
+row carrying its hue dot, name and count, and a quiet "List it free, no fee" prompt at the
+foot. One component, two jobs: on the search screen the rows are buttons that toggle a
+cluster filter; on a document page the same rows are links to that cluster's page. Any row
+that acts closes the drawer behind itself.
+
+### Filter drawer
+
+The same drawer, wider (`min(420px, 92vw)`) and on Surface, holding the full filter set
+with "Show N" in its header. It arrives from the same edge as the menu, so there is one
+place things come from.
+
+Both drawers are native `<dialog>` opened with `showModal()`. The slide is a `transform`
+transition with `overlay`/`display` set to `allow-discrete` and a `@starting-style` rule,
+so it animates open *and* closed without React owning the animation state.
+
+Icons are drawn as inline SVG. An emoji standing in for an icon set renders differently on
+every platform and belongs to none of them.
+
+### Masthead
+
+Menu button, then the wordmark, then About and Add space. No monogram: a lettermark in a
+rounded square beside a five-syllable name is the default move of a template, and it was
+adding a logo where the name already does the work.
+
+Floating over the map on the search screen; sticky and solid on every document page.
+
+### Static locator
+
+An inline-SVG locator diagram used as the second column on listing and cluster pages: nearby
+listings as zone-coloured ticks, this one called out, plus a Pune reference mark, a
+compass phrase ("18 km north-west of Pune") and a scale bar. No tile service, no key, no
+client JavaScript. Bounds are fitted to the frame's aspect before projecting, so the
+projection stays isotropic and the scale bar does not lie.
+
 ### Zone chip
 
-A pill with an 9px dot in its cluster hue. Active fills with that hue and turns the text
-white. Doubles as the map legend and the cluster filter — one control, two jobs.
+A pill with a 9px dot in its cluster hue. Active fills with that hue and turns the text
+white. Used on document pages and the 404; the menu drawer carries the same job inside
+the app.
 
 ### Chips (non-zone)
 
@@ -316,12 +528,20 @@ from a map pin: a 2px Action Blue ring.
 
 Circle in the cluster's zone hue, radius stepped by built-up area across four buckets, with
 a soft same-hue halo at 18% so a pin stays findable over busy basemap colour. Built-to-suit
-renders hollow (white fill, zone ring); leased out drops to 45% opacity.
+renders hollow (white fill, zone ring); leased out drops to 45% opacity. Clusters step
+15/19/24px by point count and go white with ink text when their members span more than one
+zone.
 
 ### Dialog
 
 Native `<dialog>` so the browser owns focus trapping, Esc and inertness. 16px radius, solid
 white, a deep shadow, and a scrim of ink at 45% with a 2px blur.
+
+### Sample notice
+
+A red-tinted band above any set of listings presented as inventory, shown only while every
+row in it is scaffolding. It keys off the non-allocatable `+91555` phone prefix, so it
+removes itself the moment real listings land rather than waiting for someone to remember.
 
 ## Do's and Don'ts
 
@@ -331,18 +551,28 @@ white, a deep shadow, and a scrim of ink at 45% with a 2px blur.
 - **Do** keep the spec strip's five cells fixed in order and position at every breakpoint.
 - **Do** use `tabular-nums` on every comparable number.
 - **Do** render unknowns as an em dash in Faint with a "Not stated in the listing" tooltip.
-- **Do** keep the map centre clear of panels.
+- **Do** let the map keep the screen. A new surface earns its space or it slides away.
+- **Do** show what the data spans where a control is unset, rather than the word "Any".
+- **Do** put a `ch` measure on the element that sets the font size.
 - **Do** let a grouped pin stay white when its members span more than one zone.
+- **Do** compute a landing figure from the real data through the real filter. A number on
+  that page that cannot be traced to `getListings()` does not belong on it.
 
 ### Don't:
 
+- **Don't** give navigation permanent width. If it is not being used, it is off-canvas.
+- **Don't** introduce a second edge for things to slide from.
+- **Don't** put a monogram beside the wordmark.
+- **Don't** hide a component class with a Tailwind utility. Unlayered CSS wins; use a
+  media query in the same stylesheet.
 - **Don't** give a card a coloured side border. The dot carries the zone; a 3px edge is the
   standard tell of a generated interface.
 - **Don't** colour anything that is neither a zone nor an action.
 - **Don't** use a zone hue to mean availability, or an availability colour to mean a zone.
 - **Don't** invent a third shadow.
 - **Don't** render an unknown as `0`, `N/A`, or a hidden row.
-- **Don't** put area or rent above the building specs in any filter or table ordering —
-  that inversion is the product's reason to exist.
+- **Don't** put area or rent above the building specs in any filter, dial or table
+  ordering — that inversion is the product's reason to exist.
+- **Don't** let the requirement block scroll away with its own results.
 - **Don't** animate anything except the 120ms filter-change fade, and honour
   `prefers-reduced-motion` by cutting it to 0ms.
