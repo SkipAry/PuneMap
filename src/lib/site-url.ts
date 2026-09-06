@@ -34,6 +34,19 @@ export const SITE_URL = candidate ? withScheme(candidate) : "http://localhost:30
 export const IS_PRODUCTION_SITE = process.env.VERCEL_ENV === "production";
 
 /**
+ * What the browser tab says when a route falls through to the 404 page.
+ *
+ * not-found.tsx cannot export metadata, so the title comes from whichever
+ * route failed - which is why an unknown address read "Cluster not found", a
+ * phrase written for a developer rather than for a reader. Kept here so the
+ * two routes that can 404 cannot drift apart.
+ */
+export const NOT_FOUND_METADATA = {
+  title: "Page not found — Pune Industrial Space",
+  robots: { index: false, follow: true },
+};
+
+/**
  * Canonical and og:url for one page, from one path.
  *
  * Next replaces `openGraph` wholesale when a child route declares its own

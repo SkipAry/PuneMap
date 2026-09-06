@@ -7,7 +7,7 @@ import { railCounts } from "@/lib/rail-counts";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListings } from "@/lib/data";
-import { addressed } from "@/lib/site-url";
+import { addressed, NOT_FOUND_METADATA } from "@/lib/site-url";
 import { fmtArea, fmtNumber } from "@/lib/derive";
 import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterFromSlug, clusterSlug, type Listing } from "@/lib/types";
@@ -28,7 +28,7 @@ function statedRange(rows: Listing[], pick: (l: Listing) => number | null) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { cluster: slug } = await params;
   const cluster = clusterFromSlug(slug);
-  if (!cluster) return { title: "Cluster not found" };
+  if (!cluster) return NOT_FOUND_METADATA;
 
   const all = await getListings();
   const rows = all.filter((l) => l.cluster === cluster && l.availability !== "Leased out");
