@@ -93,6 +93,7 @@ rounded:
   mark: "5px"
   tile: "8px"
   control: "10px"
+  tool: "12px"
   card: "14px"
   panel: "16px"
   pill: "999px"
@@ -105,8 +106,8 @@ spacing:
 layout:
   breakpoint-panel: "820px"
   breakpoint-wide: "1180px"
-  col-w: "366px"
-  col-w-wide: "398px"
+  toolbar-h: "60px"
+  toolbar-max: "80rem"
   drawer-w: "min(300px, 86vw)"
   drawer-w-wide: "min(420px, 92vw)"
   detail-col: "minmax(420px, 34rem)"
@@ -131,6 +132,25 @@ components:
     rounded: "0"
     padding: "0"
     width: "{layout.drawer-w-wide}"
+  tool-tile:
+    backgroundColor: "rgba(255, 255, 255, 0.92)"
+    textColor: "{colors.ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.tool}"
+    padding: "6px 12px"
+    height: "32px"
+  tool-field:
+    backgroundColor: "rgba(255, 255, 255, 0.92)"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.tool}"
+    padding: "8px 12px 8px 38px"
+    height: "38px"
+  cluster-tray:
+    backgroundColor: "rgba(255, 255, 255, 0.95)"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.panel}"
+    padding: "6px"
   icon-btn:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
@@ -208,21 +228,21 @@ The map is the territory and it holds the whole screen. Every other surface is s
 it arrives when the user asks for it, does one job, and leaves. Nothing stands on screen
 holding ground it is not using.
 
-That is the whole layout rule. The map is full-bleed at every width. The result column
-floats on it — a bottom sheet on a phone, a full-height panel down the left from 820px,
-never more than about a third of the width. Sections and clusters live off-canvas in a
-drawer behind one button. The filter set lives off-canvas in a second, wider drawer that
-slides in from the same edge. Both are native `<dialog>` elements, so the browser owns
-focus trapping, Esc and inertness, and both animate with a transform rather than with
-JavaScript holding the state.
+The map is full-bleed at every width. Exactly two pieces of chrome stand on it: a 60px
+band across the top carrying identity, the Map/List switch, the search field, Filters, the
+basemap switch and Add space; and a tray of cluster chips across the bottom. Both are
+translucent, so the territory reads through them. Everything else is summoned.
 
-This replaced a standing 244px navigation rail. The rail was legible and it was always
-there, which was the problem: it spent a quarter of every wide screen on navigation
-almost nobody was using, and pushed the map — the thing being read — into a corner.
+Sections and clusters live off-canvas in a drawer behind one button. The filter set lives
+off-canvas in a second, wider drawer that slides in from the same edge. Both are native
+`<dialog>` elements, so the browser owns focus trapping, Esc and inertness, and both
+animate with a transform rather than with JavaScript holding the state.
 
-The requirement is the exception to summoning. Six dials sit pinned at the top of the
-result column and do not scroll away with the results they produce, because the filter is
-the product and the product should not be able to leave the screen.
+Two arrangements were tried and dropped on the way here. A standing 244px navigation rail
+spent a quarter of every wide screen on navigation almost nobody was using. A result
+column pinned down the left took a third of the map and carried a bank of six dials that
+read "Any" six times over before anyone had asked for anything. The list is now a view you
+switch to, not a panel you work around.
 
 `/` is the one surface that is not the tool. It is a numbered document that argues for
 the tool, and it argues by running the real filter over the real listings rather than by
@@ -234,11 +254,11 @@ used identically on the map pin, the drawer row, the card dot and the cluster pa
 
 **Key Characteristics:**
 
-- Full-bleed map at every width; the result column floats on it, left and full height
+- Full-bleed map at every width; one band of controls on it, one tray of clusters
+- Every control in the band is its own translucent tile, not a compartment in a bar
 - Navigation and filters are drawers that slide from the same edge, never standing chrome
-- The requirement is pinned above the results, never scrolled with them
-- An unset dial shows the range the listings actually span, never the word "Any"
-- Nine zone hues carrying cluster identity across map, drawer, cards and pages
+- The list is a view you switch to, not a panel that permanently costs the map its width
+- Nine zone hues carrying cluster identity across map, tray, drawer, cards and pages
 - One action blue (#1862dc) for controls, never for identity
 - Tabular figures on every comparable number, in fixed cells that never reorder
 - A wordmark and no monogram — the name is the mark
@@ -339,14 +359,18 @@ fixed.
 
 ### The search screen
 
-The map is `absolute inset-0` at every width. The masthead floats on it, inset 12px. The
-result column floats below the masthead:
+The map is `absolute inset-0` at every width. Over it:
 
-- **From 820px** (`--breakpoint-panel`, the only custom one, set at iPad portrait): down
-  the left at `left: 12px`, `top: calc(60px + 20px)`, `bottom: 12px`, 366px wide — 398px
-  from 1180px. Roughly two thirds of the window stays uncovered map.
-- **Below 820px**: a bottom sheet — a 3.5rem handle closed, `top: 46%` open — so the
-  territory stays visible either way.
+- **The band.** Full width at `top: 0`, 60px, transparent with a hairline under it, its
+  contents capped at 80rem and centred. Left to right: brand tile with the menu button,
+  Map/List switch, search field (`flex: 1`), Filters, basemap switch, Add space. The
+  switches drop out below their breakpoints — Map/List under 640px, basemap under 1180px —
+  leaving menu, search, Filters and Add space, which fit 360px.
+- **The tray.** Centred at `bottom: 1rem`, scrolling horizontally, holding "All Pune" and
+  every cluster with live stock. On a phone it also carries the Map/List switch.
+- **The list view** replaces the map when switched to: inset under the band and above the
+  tray, capped at 80rem, a one-to-three column card grid.
+- MapLibre's own controls sit top-left with a `margin-top` clearing the band.
 
 ### The document pages
 
@@ -380,9 +404,8 @@ result list pass, a list of section links does not.
 **The One Edge Rule.** Everything that slides, slides in from the inline start. Two
 drawers arriving from two different edges would make the user learn the interface twice.
 
-**The Pinned Requirement Rule.** The six dials sit above the result list and do not scroll
-with it. Every dial opens the full filter set at the group it names, so a value is never
-more than one press from being changed.
+**The Two Pieces Rule.** The map carries a band and a tray, and nothing else stands on it.
+A third permanent surface has to displace one of those two, not join them.
 
 **The Reserved Height Rule.** Result cards declare `min-height: 148px` so a filter change
 reflows without shifting the page. CLS on the search screen is 0 and must stay 0.
@@ -449,21 +472,32 @@ down to 360px. An unstated spec occupies its slot with an em dash in Faint plus 
 `title="Not stated in the listing"` tooltip. Long values take short forms
 (`Plain RCC` → `RCC`) rather than reflowing the grid.
 
-### Dial (signature component)
+### Toolbar tile
 
-A bordered control: the spec name in Key with a chevron on the right, above the value in
-Readout with its unit at 11px. Set takes an Action Blue border, a 5% Action fill and an
-Action-coloured key — a filled state rather than a second border drawn inside the first.
+Everything in the band is one of these: 12px radius, white at 92% over a 12px blur, a
+1px line border and the Raised shadow. Squarer than the pill controls used inside a page,
+because a row of pills over a map reads as loose beads while a row of tiles reads as one
+band. Three shapes share it — the segmented switch (2px padding, 8px inner buttons, the
+active one filled Action Blue), the button (32px, 13px semibold, icon plus label), and the
+search field (38px, icon inset 38px from the start edge).
 
-**Unset does not say "Any."** It shows the range the listings actually span on that spec —
-`6.5–18.0 m`, `0–40 T`, `7k–250k sq ft` — in Faint at 14px rather than in the 20px weight
-of a real value. Six dials all reading "Any" is a wall of placeholder that tells the
-reader nothing; six dials reading the shape of the inventory tell them what there is to
-ask for before they have asked anything. Area is compacted to thousands, because a dial is
-about 110px wide and "2,50,000" is not.
+### Cluster tray
 
-Six in a 3×2 grid make the requirement block; three make the landing hero. Pressing one
-opens the filter drawer.
+One 16px-radius container at the bottom of the map, white at 95% over a blur, scrolling
+horizontally. Inside it a chip is a tile, not a pill: transparent until pressed, then
+filled with its zone hue. It holds "All Pune" as the reset and every cluster with live
+stock.
+
+The clusters were here once before, as loose chips floating directly on the map, where the
+result panel covered between two and four of them at every width. They came back when the
+panel left. One tray rather than nine floating pills, so they read as a set.
+
+### Dial
+
+A bordered readout: the spec name in Key with a chevron, above the value in Readout with
+its unit at 11px. Set takes an Action Blue border, a 5% Action fill and an Action-coloured
+key — a filled state rather than a second border drawn inside the first. Three of them
+carry the landing hero's requirement.
 
 ### Menu drawer
 
@@ -573,6 +607,5 @@ removes itself the moment real listings land rather than waiting for someone to 
 - **Don't** render an unknown as `0`, `N/A`, or a hidden row.
 - **Don't** put area or rent above the building specs in any filter, dial or table
   ordering — that inversion is the product's reason to exist.
-- **Don't** let the requirement block scroll away with its own results.
 - **Don't** animate anything except the 120ms filter-change fade, and honour
   `prefers-reduced-motion` by cutting it to 0ms.
