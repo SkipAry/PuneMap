@@ -29,6 +29,13 @@ const ICONS = {
     </>
   ),
   plus: <path d="M8 3.2v9.6M3.2 8h9.6" />,
+  sliders: (
+    <>
+      <path d="M2.5 4.5h11M2.5 11.5h11" />
+      <circle cx="6" cy="4.5" r="1.6" />
+      <circle cx="10.5" cy="11.5" r="1.6" />
+    </>
+  ),
   info: (
     <>
       <circle cx="8" cy="8" r="5.6" />
@@ -61,11 +68,16 @@ export function SiteMenu({
   clusters = [],
   counts,
   onToggle,
+  onFilters,
+  activeFilters = 0,
 }: {
   active?: "search" | "list" | "about";
   /** Selected clusters, when the menu is filtering a live search. */
   clusters?: string[];
   counts: Record<string, number>;
+  /** Present on the search screen, where the filter set is a drawer away. */
+  onFilters?: () => void;
+  activeFilters?: number;
   /**
    * Present on the search screen, where a cluster is a filter to toggle. Absent
    * on a reading page, where the same row is a link to that cluster instead -
@@ -126,6 +138,28 @@ export function SiteMenu({
               </span>
               Search the map
             </Link>
+            {onFilters ? (
+              <button
+                type="button"
+                className="rail-link w-full"
+                onClick={() => {
+                  close();
+                  // Let the menu finish sliding out before the filters slide
+                  // in, or two drawers cross on the same edge.
+                  setTimeout(onFilters, 220);
+                }}
+              >
+                <span className="ic">
+                  <Icon name="sliders" />
+                </span>
+                Filters
+                {activeFilters > 0 ? (
+                  <span className="num ms-auto text-[0.78125rem] text-action">
+                    {activeFilters}
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
             <Link
               className="rail-link"
               href="/list-your-space"

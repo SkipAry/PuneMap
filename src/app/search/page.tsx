@@ -1,5 +1,3 @@
-import { Suspense } from "react";
-
 import { SearchShell } from "@/components/search-shell";
 import { getListings } from "@/lib/data";
 import { addressed } from "@/lib/site-url";
@@ -24,11 +22,13 @@ export default async function SearchPage() {
       <h1 className="sr-only">
         Industrial sheds, warehouses and factory buildings on rent around Pune
       </h1>
-      <Suspense fallback={<div className="p-4 text-sm text-muted">Loading listings…</div>}>
-        {/* The shell owns the masthead: its menu toggles cluster filters, which
-            only the client tree can wire up. */}
-        <SearchShell all={listings} />
-      </Suspense>
+      {/*
+        No Suspense boundary. The page is force-dynamic, so useSearchParams()
+        never needs one, and the boundary was not resolving on the client: the
+        shell rendered server-side, sat in React's holding div, and the fallback
+        stayed on screen for good.
+      */}
+      <SearchShell all={listings} />
     </main>
   );
 }

@@ -22,6 +22,26 @@ type Predicate = {
 function buildPredicates(f: Filters): Predicate[] {
   const p: Predicate[] = [];
 
+  /*
+    Free text matches where the building is and what it is - never a spec.
+    A manager types "Chakan" or "warehouse", not "12". Numbers belong to the
+    filters, where an unstated value has a defined meaning; a text search that
+    silently matched specs would smuggle guesses back in.
+
+    The haystack is built from NOT NULL columns plus locality, so it is never
+    null and the search can never register as a null exclusion.
+  */
+  if (f.q) {
+    const needle = f.q.toLowerCase();
+    p.push({
+      key: "q",
+      label: "the search text",
+      value: (l) => `${l.locality ?? ""} ${l.cluster} ${l.property_type}`.toLowerCase(),
+      test: ((v: string) => v.includes(needle)) as Predicate["test"],
+      nullable: false,
+    });
+  }
+
   // Building specs first - they are the reason the site exists.
   if (f.minHeight !== null) {
     const min = f.minHeight;

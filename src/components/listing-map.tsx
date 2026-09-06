@@ -248,7 +248,8 @@ export default function ListingMap({
       style: basemapStyle("light"),
     });
 
-    instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+    // Top-left, under the toolbar: the bottom of the map is the cluster tray's.
+    instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
 
     instance.on("load", () => {
       addLayers(instance);

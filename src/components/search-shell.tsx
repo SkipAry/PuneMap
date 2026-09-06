@@ -11,9 +11,9 @@ import { BASEMAPS, type BasemapId } from "@/lib/map-style";
 import { PAGE_SIZE, applyFilters, describeMiss } from "@/lib/query";
 import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
 
+import { AddSpaceButton } from "./add-space-button";
 import { FilterRail } from "./filter-rail";
 import { ListingCard, SampleNotice } from "./listing-card";
-import { SiteHeader } from "./site-header";
 import { SiteMenu } from "./site-menu";
 
 const ListingMap = dynamic(() => import("./listing-map"), {
@@ -21,16 +21,12 @@ const ListingMap = dynamic(() => import("./listing-map"), {
   loading: () => <div className="size-full bg-ground" />,
 });
 
-/**
- * Areas run to six figures, and a dial is a hundred pixels wide. "2,50,000"
- * does not fit and "2.5L" is not what a spec sheet says, so thousands it is.
- * Only the dial uses this - a listing still shows its area in full.
- */
-const compactSqft = (n: number) => (n >= 1_000 ? `${Math.round(n / 1000)}k` : fmtNumber(n));
-
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Map or list. The map is the default; the list is the same rows, read down. */
+type View = "map" | "list";
 
 export function SearchShell({ all }: { all: Listing[] }) {
   const router = useRouter();
@@ -104,17 +100,32 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const [basemap, setBasemap] = useState<BasemapId>("light");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoverSlug, setHoverSlug] = useState<string | null>(null);
-  const [listOpen, setListOpen] = useState(false);
+  const [view, setView] = useState<View>("map");
 
   const filtersRef = useRef<HTMLDialogElement>(null);
   const openFilters = useCallback(() => filtersRef.current?.showModal(), []);
   const closeFilters = useCallback(() => filtersRef.current?.close(), []);
 
+  /*
+    Typing is the one filter that must not push a history entry per keystroke,
+    so the field is local and the URL is caught up on a pause.
+  */
+  const [q, setQ] = useState(filters.q);
+  useEffect(() => setQ(filters.q), [filters.q]);
+  useEffect(() => {
+    if (q === filters.q) return;
+    const t = setTimeout(() => write({ ...filters, q }, "replace"), 250);
+    return () => clearTimeout(t);
+  }, [q, filters, write]);
+
   const selectFromMap = useCallback((slug: string) => {
     setActiveSlug(slug);
-    setListOpen(true);
-    const node = document.getElementById(`card-${slug}`);
-    node?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    setView("list");
+    // The card is in a list that has just been mounted, so wait a frame.
+    requestAnimationFrame(() => {
+      const node = document.getElementById(`card-${slug}`);
+      node?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    });
   }, []);
 
   const visible = displayed.slice(0, limit);
@@ -130,57 +141,6 @@ export function SearchShell({ all }: { all: Listing[] }) {
     return out;
   }, [all]);
 
-  /*
-    What the listings actually span on each spec. An untouched dial shows this
-    rather than the word "Any": a requirement block that has not been touched
-    yet should still be telling the reader what there is to ask for.
-  */
-  const spans = useMemo(() => {
-    const span = (pick: (l: Listing) => number | null, fmt: (n: number) => string) => {
-      const vs = all.map(pick).filter((v): v is number => v !== null);
-      if (vs.length === 0) return "—";
-      const lo = Math.min(...vs);
-      const hi = Math.max(...vs);
-      return lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`;
-    };
-    const floors = new Set(all.map((l) => l.flooring).filter(Boolean));
-    return {
-      height: span((l) => l.height_m, (n) => n.toFixed(1)),
-      crane: span((l) => l.crane_capacity_ton, (n) => String(n)),
-      power: span((l) => l.power_hp, fmtNumber),
-      docks: span((l) => l.docks, (n) => String(n)),
-      floor: `${floors.size} kinds`,
-      area: span((l) => l.total_builtup, compactSqft),
-    };
-  }, [all]);
-
-  /*
-    The six dials, in spec order. Area and rent sit last because putting them
-    first is the inversion this product exists to refuse.
-  */
-  const dials = [
-    { k: "Height", set: filters.minHeight !== null,
-      v: filters.minHeight === null ? spans.height : filters.minHeight.toFixed(1),
-      u: filters.minHeight === null ? "m" : "m+" },
-    { k: "Crane", set: filters.crane !== null,
-      v: filters.crane === null ? spans.crane : filters.crane === "provision" ? "Prov." : String(filters.crane),
-      u: filters.crane === null ? "T" : typeof filters.crane === "number" ? "T+" : "" },
-    { k: "Power", set: filters.minPower !== null,
-      v: filters.minPower === null ? spans.power : fmtNumber(filters.minPower),
-      u: filters.minPower === null ? "HP" : "HP+" },
-    { k: "Docks", set: filters.minDocks !== null && filters.minDocks > 0,
-      v: filters.minDocks ? String(filters.minDocks) : spans.docks,
-      u: filters.minDocks ? "+" : "" },
-    { k: "Floor", set: filters.flooring.length > 0,
-      v: filters.flooring.length === 0 ? spans.floor
-        : filters.flooring.length === 1 ? filters.flooring[0]
-        : `${filters.flooring.length} types`,
-      u: "" },
-    { k: "Area", set: filters.minArea !== null,
-      v: filters.minArea === null ? spans.area : compactSqft(filters.minArea),
-      u: filters.minArea === null ? "sq ft" : "sq ft+" },
-  ];
-
   const toggleCluster = (c: string) =>
     patch({
       clusters: filters.clusters.includes(c)
@@ -188,22 +148,272 @@ export function SearchShell({ all }: { all: Listing[] }) {
         : [...filters.clusters, c],
     });
 
+  const countLine = (
+    <>
+      <span className="num">{fmtNumber(result.total)}</span>{" "}
+      <span className="text-muted">
+        {result.total === 1 ? "match" : "matches"} of {fmtNumber(all.length)}
+      </span>
+    </>
+  );
+
   return (
-    /* The map is the ground. Everything else floats on it: the masthead, the
-       result column, and the filters when they replace that column. */
+    /* The map is the page. Everything else is chrome floating on it. */
     <div className="shell fixed inset-0 overflow-hidden">
-      <SiteHeader
-        floating
-        subtitle="Sheds, warehouses and factory buildings on rent around Pune"
-        counts={clusterCounts}
-        menu={
-          <SiteMenu
-            clusters={filters.clusters}
-            counts={clusterCounts}
-            onToggle={toggleCluster}
+      <div className="shell-map absolute inset-0">
+        {mapReady ? (
+          <ListingMap
+            listings={displayed}
+            activeSlug={activeSlug}
+            hoverSlug={hoverSlug}
+            basemap={basemap}
+            onSelect={selectFromMap}
           />
-        }
-      />
+        ) : (
+          <div className="size-full bg-ground" />
+        )}
+      </div>
+
+      {/*
+        One band across the top of the map. It is transparent with a hairline
+        under it, and every control in it is its own translucent tile, so the
+        territory still reads through the bar instead of being walled off.
+      */}
+      <div className="toolbar">
+        <div className="toolbar-inner">
+          <div className="tool tool-brand">
+            <SiteMenu
+              clusters={filters.clusters}
+              counts={clusterCounts}
+              onToggle={toggleCluster}
+              onFilters={openFilters}
+              activeFilters={activeCount}
+            />
+            <span className="hidden truncate pe-2.5 text-sm font-bold tracking-[-0.012em] lg:block">
+              Pune Industrial Space
+            </span>
+          </div>
+
+          <div className="tool-seg tool-seg--view">
+            <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>
+              Map
+            </button>
+            <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>
+              List
+            </button>
+          </div>
+
+          <label className="tool-field">
+            <span className="sr-only">Search by locality, cluster or building type</span>
+            <svg
+              viewBox="0 0 16 16"
+              width="15"
+              height="15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="7" cy="7" r="4.2" />
+              <path d="M10.2 10.2 14 14" />
+            </svg>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search Chakan, MIDC Phase II, warehouse…"
+            />
+          </label>
+
+          <button
+            type="button"
+            className="tool-btn"
+            aria-pressed={activeCount > 0}
+            onClick={openFilters}
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M2.5 4.5h11M2.5 11.5h11" />
+              <circle cx="6" cy="4.5" r="1.6" />
+              <circle cx="10.5" cy="11.5" r="1.6" />
+            </svg>
+            <span className="hidden sm:inline">Filters</span>
+            {activeCount > 0 ? <span className="num">{activeCount}</span> : null}
+          </button>
+
+          <div className="tool-seg tool-seg--basemap">
+            {BASEMAPS.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                aria-pressed={basemap === b.id}
+                onClick={() => setBasemap(b.id)}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-none">
+            <AddSpaceButton />
+          </div>
+        </div>
+      </div>
+
+      {/* Reads the whole set, not the filtered page: a count and a map full of
+          pins imply real inventory whatever the current filters show. */}
+      <div className="notice-strip">
+        <div className="panel overflow-hidden">
+          <SampleNotice listings={all} />
+        </div>
+      </div>
+
+      {/* ── The list. Same rows as the map, read down instead of across. ── */}
+      {view === "list" ? (
+        <div className="list-view panel">
+          <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
+            <h2 className="text-base font-bold">Matching listings</h2>
+            <p className="ms-auto text-sm" aria-live="polite">
+              {countLine}
+            </p>
+          </div>
+
+          {/* What the null contract cost, and the one control that reverses it. */}
+          {!filters.loose && result.nullExclusions.length > 0 ? (
+            <div className="border-b border-line bg-[rgba(27,110,243,0.05)] px-4 py-2.5">
+              <p className="text-sm">
+                <span className="num">{fmtNumber(result.nullExcludedTotal)}</span> more{" "}
+                {result.nullExcludedTotal === 1 ? "listing does" : "listings do"} not state{" "}
+                {result.nullExclusions.map((n) => n.label).join(" or ")}. Unstated does not
+                mean absent — these are worth a call.
+              </p>
+              <button
+                type="button"
+                className="btn-action mt-2 !min-h-8"
+                onClick={() => patch({ loose: true })}
+              >
+                Include them
+              </button>
+            </div>
+          ) : null}
+
+          {filters.loose ? (
+            <div className="border-b border-line px-4 py-2">
+              <button
+                type="button"
+                className="text-sm text-action underline"
+                onClick={() => patch({ loose: false })}
+              >
+                Exclude listings that do not state these specs
+              </button>
+            </div>
+          ) : null}
+
+          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
+            {result.total === 0 ? (
+              <div className="px-4 py-6">
+                <p className="text-base">
+                  No shed matches all {activeCount}{" "}
+                  {activeCount === 1 ? "filter" : "filters"}.
+                  {result.closestMiss
+                    ? ` The closest miss is ${describeMiss(result.closestMiss)}.`
+                    : ""}
+                </p>
+                <button type="button" className="btn-quiet mt-3" onClick={clearAll}>
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-3">
+                  {visible.map((listing) => (
+                    <div
+                      key={listing.slug}
+                      data-leaving={leaving.has(listing.slug)}
+                      className="result-card"
+                    >
+                      <ListingCard
+                        listing={listing}
+                        active={activeSlug === listing.slug}
+                        onHover={setHoverSlug}
+                        onSelect={setActiveSlug}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {displayed.length > limit ? (
+                  <div className="px-3 pb-4">
+                    <button
+                      type="button"
+                      className="btn-quiet w-full"
+                      onClick={() => setLimit((n) => n + PAGE_SIZE)}
+                    >
+                      Show {Math.min(PAGE_SIZE, displayed.length - limit)} more
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {/*
+        Clusters along the bottom. They were here once, as loose chips that the
+        result panel covered two to four of at every width. There is no result
+        panel over the map any more, so they can come back - and they now sit
+        in one tray rather than floating individually.
+      */}
+      <div className="chipbar">
+        <div className="chipbar-tray scrollbar-none">
+          {/* Phone has no room for Map/List in the bar, so the switch rides
+              here, where a thumb already is. */}
+          <button
+            type="button"
+            className="chip chip--view sm:hidden"
+            onClick={() => setView((v) => (v === "map" ? "list" : "map"))}
+          >
+            {view === "map" ? "List" : "Map"}
+            <span className="num">{fmtNumber(result.total)}</span>
+          </button>
+
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={filters.clusters.length === 0}
+            onClick={() => patch({ clusters: [] })}
+          >
+            All Pune
+            <span className="num opacity-70">{fmtNumber(all.length)}</span>
+          </button>
+
+          {CLUSTERS.filter((c) => clusterCounts[c]).map((c) => (
+            <button
+              key={c}
+              type="button"
+              className="chip"
+              data-zone=""
+              aria-pressed={filters.clusters.includes(c)}
+              style={{ ["--zone" as string]: zoneOf(c) }}
+              onClick={() => toggleCluster(c)}
+            >
+              <span className="chip-dot" aria-hidden="true" />
+              {c}
+              <span className="num opacity-70">{clusterCounts[c]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* The filter set waits off-canvas beside the menu and slides in from the
           same edge, so nothing covers the map until it is asked for. */}
@@ -231,214 +441,16 @@ export function SearchShell({ all }: { all: Listing[] }) {
         </div>
       </dialog>
 
-      {/* Results: the map text-equivalent, always reachable. */}
-      <section
-        id="results"
-        aria-label="Matching listings"
-        // Position lives in .results-dock; data-open drives the sheet states.
-        data-open={listOpen ? "true" : "false"}
-        className="panel results-dock flex flex-col overflow-hidden"
-      >
-        {/* The card headings are h3, so the list needs its own h2 to keep the
-            document outline unbroken. Visually redundant with the count. */}
-        <h2 className="sr-only">Matching listings</h2>
-
-        {/* Phone: one compact bar, because the sheet has to stay a sheet. */}
-        <div className="flex items-center gap-2 border-b border-line px-3 py-2.5 panel:hidden">
-          <button
-            type="button"
-            className="chip"
-            aria-pressed={activeCount > 0}
-            onClick={openFilters}
-          >
-            Filters{activeCount > 0 ? ` · ${activeCount}` : ""}
-          </button>
-          <p className="text-sm" aria-live="polite">
-            <span className="num">{fmtNumber(result.total)}</span>{" "}
-            <span className="text-muted">{result.total === 1 ? "match" : "matches"}</span>
-          </p>
-          <button
-            type="button"
-            className="btn-quiet ms-auto !min-h-8 !px-2.5"
-            aria-expanded={listOpen}
-            onClick={() => setListOpen((v) => !v)}
-          >
-            {listOpen ? "Hide list" : "Show list"}
-          </button>
-        </div>
-
-        {/*
-          Wide: the requirement stands above the results it produces and does
-          not scroll away with them. Each dial opens the full set at the group
-          it names, so a value is never more than one press from being changed.
-        */}
-        <div className="hidden shrink-0 border-b border-line px-4 pb-4 pt-4 panel:block">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-lg">Requirement</h2>
-            <p className="label">unset shows what the listings span</p>
-          </div>
-
-          <div className="dial-grid mt-3">
-            {dials.map((d) => (
-              <button
-                key={d.k}
-                type="button"
-                className="dial"
-                data-set={d.set ? "true" : "false"}
-                onClick={openFilters}
-              >
-                <span className="k">{d.k}</span>
-                <span className="v">
-                  {d.v}
-                  {d.u ? <span className="u">{d.u}</span> : null}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-3 flex items-baseline gap-2">
-            <p className="text-sm" aria-live="polite">
-              <span className="num font-bold">{fmtNumber(result.total)}</span>{" "}
-              <span className="text-muted">
-                {result.total === 1 ? "match" : "matches"} of {fmtNumber(all.length)}
-              </span>
-            </p>
-            <button
-              type="button"
-              className="ms-auto text-sm text-action underline"
-              onClick={openFilters}
-            >
-              All filters{activeCount > 0 ? ` · ${activeCount}` : ""}
-            </button>
-          </div>
-        </div>
-
-        {/* Reads the whole set, not the filtered page: a count and a map full of
-            pins imply real inventory whatever the current filters show. */}
-        <SampleNotice listings={all} />
-
-        {/* What the null contract cost, and the one control that reverses it. */}
-        {!filters.loose && result.nullExclusions.length > 0 ? (
-          <div className="border-b border-line bg-[rgba(27,110,243,0.05)] px-3 py-2.5">
-            <p className="text-sm">
-              <span className="num">{fmtNumber(result.nullExcludedTotal)}</span> more{" "}
-              {result.nullExcludedTotal === 1 ? "listing does" : "listings do"} not state{" "}
-              {result.nullExclusions.map((n) => n.label).join(" or ")}. Unstated does not mean
-              absent — these are worth a call.
-            </p>
-            <button
-              type="button"
-              className="btn-action mt-2 !min-h-8"
-              onClick={() => patch({ loose: true })}
-            >
-              Include them
-            </button>
-          </div>
-        ) : null}
-
-        {filters.loose ? (
-          <div className="border-b border-line px-3 py-2">
-            <button
-              type="button"
-              className="text-sm text-action underline"
-              onClick={() => patch({ loose: false })}
-            >
-              Exclude listings that do not state these specs
-            </button>
-          </div>
-        ) : null}
-
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
-          {result.total === 0 ? (
-            <div className="px-4 py-6">
-              <p className="text-base">
-                No shed matches all {activeCount} {activeCount === 1 ? "filter" : "filters"}.
-                {result.closestMiss
-                  ? ` The closest miss is ${describeMiss(result.closestMiss)}.`
-                  : ""}
-              </p>
-              <button type="button" className="btn-quiet mt-3" onClick={clearAll}>
-                Clear all filters
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col gap-2 p-2.5">
-                {visible.map((listing) => (
-                  <div
-                    key={listing.slug}
-                    data-leaving={leaving.has(listing.slug)}
-                    className="result-card"
-                  >
-                    <ListingCard
-                      listing={listing}
-                      active={activeSlug === listing.slug}
-                      onHover={setHoverSlug}
-                      onSelect={setActiveSlug}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {displayed.length > limit ? (
-                <div className="px-2.5 pb-3">
-                  <button
-                    type="button"
-                    className="btn-quiet w-full"
-                    onClick={() => setLimit((n) => n + PAGE_SIZE)}
-                  >
-                    Show {Math.min(PAGE_SIZE, displayed.length - limit)} more
-                  </button>
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
-
-        <noscript>
-          <p className="border-t border-line px-3 py-2 text-sm text-muted">
-            Filters need JavaScript. Browse a cluster instead:{" "}
-            {CLUSTERS.map((c) => (
-              <a key={c} href={`/${clusterSlug(c)}`} className="underline">
-                {c}{" "}
-              </a>
-            ))}
-          </p>
-        </noscript>
-      </section>
-
-      {/*
-        The map pane. Its controls sit inside it rather than on the shell, so
-        they float over the map they belong to and never over the rail.
-      */}
-      <div className="shell-map absolute inset-0">
-        {mapReady ? (
-          <ListingMap
-            listings={displayed}
-            activeSlug={activeSlug}
-            hoverSlug={hoverSlug}
-            basemap={basemap}
-            onSelect={selectFromMap}
-          />
-        ) : (
-          <div className="size-full bg-ground" />
-        )}
-
-        <div className="panel absolute bottom-3 left-3 z-20 hidden p-1 sm:block">
-          <div className="segment">
-            {BASEMAPS.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                aria-pressed={basemap === b.id}
-                onClick={() => setBasemap(b.id)}
-              >
-                {b.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <noscript>
+        <p className="panel absolute inset-x-3 bottom-20 z-30 px-3 py-2 text-sm text-muted">
+          Filters need JavaScript. Browse a cluster instead:{" "}
+          {CLUSTERS.map((c) => (
+            <a key={c} href={`/${clusterSlug(c)}`} className="underline">
+              {c}{" "}
+            </a>
+          ))}
+        </p>
+      </noscript>
     </div>
   );
 }

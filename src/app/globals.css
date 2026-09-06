@@ -32,7 +32,11 @@
 
   --radius-panel: 16px;
   --radius-control: 10px;
+  /* Toolbar tiles are squarer than the pill controls inside the page: a bar of
+     pills over a map reads as loose beads, a bar of tiles reads as one row. */
+  --radius-tool: 12px;
   --topbar-h: 60px;
+  --toolbar-h: 64px;
 
   /*
     Where the result panel can sit beside the map instead of over it. Set at
@@ -317,67 +321,247 @@
 }
 
 /*
-  Where the result list lives. Written as plain media queries rather than
-  stacked utility variants, because the sheet uses logical insets and the docked
-  panel needs a physical left, and the two do not reliably override each other.
+  ── The search screen ────────────────────────────────────────────────────
 
-  Below 820px it is a bottom sheet: a handle when closed, 46% tall when open.
-  From 820px (iPad portrait) it docks beside the map and the open state is moot.
+  The map holds the whole viewport. One band of controls lies across the top
+  of it and one tray of cluster chips across the bottom; nothing else stands
+  on the map unless it is asked for.
 */
-.results-dock {
+.toolbar {
   position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  z-index: 20;
-}
-
-.results-dock[data-open="false"] {
-  top: auto;
-  max-height: 3.5rem;
-}
-
-.results-dock[data-open="true"] {
-  top: 46%;
+  inset-inline: 0;
+  top: 0;
+  z-index: 30;
+  padding: 0.5625rem 0.75rem;
+  border-bottom: 1px solid var(--color-line);
 }
 
 @media (min-width: 640px) {
-  .results-dock {
-    left: 0.75rem;
-    right: 0.75rem;
-    bottom: 0.75rem;
+  .toolbar {
+    padding-inline: 1.5rem;
+  }
+}
+
+.toolbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .toolbar-inner {
+    gap: 0.75rem;
   }
 }
 
 /*
-  The map is the ground at every width. From 820px the result column stops
-  being a sheet across the bottom and becomes a full-height panel down the
-  left, leaving the rest of the territory uncovered - the arrangement a maps
-  app uses, and the reason navigation is a drawer rather than a standing rail.
+  Each control is its own translucent tile rather than a compartment inside
+  one long bar, so the map still reads underneath the row.
 */
-@media (min-width: 820px) {
-  :root {
-    --col-w: 366px;
-  }
+.tool,
+.tool-seg,
+.tool-btn,
+.tool-field > input {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-tool);
+  box-shadow: var(--shadow-raised);
+}
 
-  .results-dock,
-  .results-dock[data-open="false"],
-  .results-dock[data-open="true"] {
-    left: 0.75rem;
-    right: auto;
-    width: var(--col-w);
-    /* Clears the floating masthead rather than sliding under it. */
-    top: calc(var(--topbar-h) + 1.25rem);
-    bottom: 0.75rem;
-    max-height: none;
-    border-radius: var(--radius-panel);
+.tool-brand {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 2px;
+}
+
+/*
+  Shown and hidden here rather than with `hidden sm:inline-flex`: .tool-seg is
+  unlayered and beats Tailwind's layered `hidden`, so the utility loses and the
+  segment stays on a phone. Same trap that kept the old rail and the call bar
+  on screen.
+*/
+.tool-seg {
+  display: none;
+  flex: none;
+  padding: 2px;
+}
+
+@media (min-width: 640px) {
+  .tool-seg--view {
+    display: inline-flex;
   }
 }
 
+/* The basemap switch is the first thing to go: it is a preference, not a task. */
 @media (min-width: 1180px) {
-  :root {
-    --col-w: 398px;
+  .tool-seg--basemap {
+    display: inline-flex;
   }
+}
+
+.tool-seg > button {
+  min-height: 28px;
+  padding: 0.3125rem 0.75rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-seg > button[aria-pressed="true"] {
+  background: var(--color-action);
+  color: #fff;
+}
+
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: none;
+  min-height: 32px;
+  padding: 0.375rem 0.75rem;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-btn[aria-pressed="true"] {
+  border-color: var(--color-action);
+  color: var(--color-action);
+}
+
+.tool-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-field > svg {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  color: var(--color-faint);
+  pointer-events: none;
+}
+
+.tool-field > input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0.5rem 0.75rem 0.5rem 2.375rem;
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--text-base);
+}
+
+.tool-field > input::placeholder {
+  color: var(--color-faint);
+}
+
+/* The sample-data warning belongs under the bar, not inside the tray. */
+.notice-strip {
+  position: absolute;
+  inset-inline: 0.75rem;
+  top: calc(var(--toolbar-h) + 0.75rem);
+  z-index: 26;
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
+.notice-strip:empty {
+  display: none;
+}
+
+/* The cluster tray. One container, scrolling horizontally, centred. */
+.chipbar {
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: 1rem;
+  z-index: 25;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.chipbar-tray {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.375rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-panel);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: var(--shadow-panel);
+  pointer-events: auto;
+}
+
+/* Inside the tray a chip is a tile like the toolbar's, not a loose pill. */
+.chipbar-tray .chip {
+  flex: none;
+  min-height: 28px;
+  padding: 0.375rem 0.75rem;
+  border-color: transparent;
+  border-radius: var(--radius-tool);
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.chipbar-tray .chip:hover {
+  background: rgba(16, 24, 40, 0.05);
+  border-color: transparent;
+}
+
+.chipbar-tray .chip[aria-pressed="true"]:hover {
+  background: var(--zone, var(--color-ink));
+}
+
+.chip--view {
+  background: var(--color-ink) !important;
+  color: #fff;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+  The list is the same rows read down instead of across. It covers the map
+  because it replaces it, rather than sitting on it.
+*/
+.list-view {
+  position: absolute;
+  inset: calc(var(--toolbar-h) + 0.75rem) 0.75rem 4.5rem;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+/* MapLibre's own controls have to clear the band lying over them. */
+.shell-map .maplibregl-ctrl-top-left {
+  margin-top: var(--toolbar-h);
 }
 
 /*

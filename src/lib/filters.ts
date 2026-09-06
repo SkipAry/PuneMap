@@ -25,6 +25,8 @@ export const CRANE_MAX = 100;
 export type CraneFilter = "provision" | number;
 
 export type Filters = {
+  /** Free text over locality, cluster and building type. Never over specs. */
+  q: string;
   clusters: string[];
   minHeight: number | null;
   crane: CraneFilter | null;
@@ -44,6 +46,7 @@ export type Filters = {
 };
 
 export const EMPTY_FILTERS: Filters = {
+  q: "",
   clusters: [],
   minHeight: null,
   crane: null,
@@ -104,6 +107,7 @@ export function parseFilters(p: Params): Filters {
   }
 
   return {
+    q: (p.get("q") ?? "").trim().slice(0, 80),
     clusters,
     minHeight: numParam(p, "minHeight", HEIGHT_MIN, HEIGHT_MAX),
     crane,
@@ -126,6 +130,7 @@ export function parseFilters(p: Params): Filters {
 /** Writes only what differs from the default, so shared URLs stay readable. */
 export function serialiseFilters(f: Filters): URLSearchParams {
   const p = new URLSearchParams();
+  if (f.q) p.set("q", f.q);
   if (f.clusters.length) p.set("cluster", f.clusters.map(clusterSlug).join(","));
   if (f.minHeight !== null) p.set("minHeight", String(f.minHeight));
   if (f.crane !== null) p.set("crane", String(f.crane));
@@ -151,6 +156,7 @@ export function serialiseFilters(f: Filters): URLSearchParams {
  */
 export function activeFilterCount(f: Filters): number {
   let n = 0;
+  if (f.q) n++;
   if (f.clusters.length) n++;
   if (f.minHeight !== null) n++;
   if (f.crane !== null) n++;
