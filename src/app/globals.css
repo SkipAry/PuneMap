@@ -395,6 +395,15 @@
 }
 
 /*
+  The landing centres on .wrap, whose 68rem is a border box holding 1.25rem of
+  padding either side. The band has its own padding, so it matches the content
+  edges by taking the measure inside that padding rather than the wrap itself.
+*/
+.toolbar--wrap .toolbar-inner {
+  max-width: 65.5rem;
+}
+
+/*
   Reading pages put their column on paper. Every other surface on the site is
   white on the ground; body copy set straight onto the ground was the one
   place that read as unfinished rather than as a choice.
@@ -495,6 +504,22 @@
 .tool-btn[aria-current="page"] {
   border-color: var(--color-action);
   color: var(--color-action);
+}
+
+/*
+  A tile that only appears once there is room. Hidden here rather than with
+  `hidden md:inline-flex`: .tool-btn is unlayered and beats the utility, which
+  is the same trap that kept the old rail, the call bar and the view switch on
+  screen at widths they had no business being at.
+*/
+.tool-btn--wide {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .tool-btn--wide {
+    display: inline-flex;
+  }
 }
 
 .tool-field {

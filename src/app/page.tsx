@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SampleNotice } from "@/components/listing-card";
+import { SiteMenu } from "@/components/site-menu";
 import { SpecStrip } from "@/components/spec-strip";
 import { zoneOf } from "@/lib/clusters";
 import { fmtNumber, listingTitle } from "@/lib/derive";
@@ -91,17 +92,23 @@ export default async function LandingPage() {
 
   return (
     <div className="bg-white">
-      <header className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur">
-        <div className="wrap flex items-center gap-3" style={{ height: "var(--topbar-h)" }}>
-          <span className="truncate text-base font-bold tracking-tight">
-            Pune Industrial Space
-          </span>
+      {/* The same band as every other page, built from the shared tiles rather
+          than imported, because this one leads with "Open the map" instead of
+          "Add space" and carries no page subtitle. */}
+      <div className="toolbar toolbar--doc toolbar--wrap">
+        <div className="toolbar-inner">
+          <div className="tool tool-brand">
+            <SiteMenu counts={counts} />
+            <span className="hidden truncate pe-2.5 text-sm font-bold tracking-[-0.012em] sm:block">
+              Pune Industrial Space
+            </span>
+          </div>
 
-          <nav className="ms-auto flex items-center gap-2">
-            <Link href="/about" className="btn-quiet hidden sm:inline-flex">
+          <nav className="ms-auto flex flex-none items-center gap-2">
+            <Link href="/about" className="tool-btn">
               About
             </Link>
-            <Link href="/list-your-space" className="btn-quiet hidden md:inline-flex">
+            <Link href="/list-your-space" className="tool-btn tool-btn--wide">
               List a property
             </Link>
             <Link href="/search" className="btn-action">
@@ -109,7 +116,7 @@ export default async function LandingPage() {
             </Link>
           </nav>
         </div>
-      </header>
+      </div>
 
       <SampleNotice listings={all} />
 
@@ -285,18 +292,27 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            <dl className="spec-strip !grid-cols-2 self-center">
+            {/* Given a card and a caption rather than left as a bare two-cell
+                strip: alone in an 18rem column it read as something that had
+                come loose from the paragraph beside it. */}
+            <figure className="card self-center p-4">
+              <dl className="spec-strip !grid-cols-2">
               <div className="spec-cell">
                 <dd className="num spec-value">10T</dd>
                 <dt className="label mt-0.5">stated</dt>
               </div>
-              <div className="spec-cell">
-                <dd className="num spec-value" data-unknown="true">
-                  —
-                </dd>
-                <dt className="label mt-0.5">not stated</dt>
-              </div>
-            </dl>
+                <div className="spec-cell">
+                  <dd className="num spec-value" data-unknown="true">
+                    —
+                  </dd>
+                  <dt className="label mt-0.5">not stated</dt>
+                </div>
+              </dl>
+              <figcaption className="label mt-3 max-w-[24ch]">
+                The same field, answered and unanswered. Never{" "}
+                <span className="num text-ink">0</span>.
+              </figcaption>
+            </figure>
           </div>
         </section>
 
