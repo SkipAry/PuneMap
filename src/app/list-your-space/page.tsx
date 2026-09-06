@@ -19,12 +19,17 @@ export default async function ListYourSpacePage() {
 
   return (
     <>
-      <SiteHeader subtitle="List your space" counts={clusterCounts} active="list" />
+      <SiteHeader
+        subtitle="List your space"
+        counts={clusterCounts}
+        active="list"
+        measure="reading"
+      />
 
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10"
+        className="reading mx-auto my-6 max-w-3xl px-4 py-8 sm:px-8 sm:py-10"
       >
         <h1 className="text-3xl">List your space, free</h1>
         <p className="mt-3 max-w-[62ch] text-base text-muted">

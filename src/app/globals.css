@@ -383,6 +383,28 @@
   max-width: none;
 }
 
+/*
+  A reading page centres its column, so the band centres with it rather than
+  spanning: tiles pinned to the window while the text starts 350px inboard
+  read as chrome belonging to some other page.
+*/
+@media (min-width: 820px) {
+  .toolbar--reading .toolbar-inner {
+    max-width: 48rem;
+  }
+}
+
+/*
+  Reading pages put their column on paper. Every other surface on the site is
+  white on the ground; body copy set straight onto the ground was the one
+  place that read as unfinished rather than as a choice.
+*/
+.reading {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+}
+
 @media (min-width: 640px) {
   .toolbar-inner {
     gap: 0.75rem;
@@ -469,7 +491,8 @@
   white-space: nowrap;
 }
 
-.tool-btn[aria-pressed="true"] {
+.tool-btn[aria-pressed="true"],
+.tool-btn[aria-current="page"] {
   border-color: var(--color-action);
   color: var(--color-action);
 }

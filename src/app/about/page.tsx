@@ -18,14 +18,15 @@ export default async function AboutPage() {
 
   return (
     <>
-      <SiteHeader subtitle="About" counts={clusterCounts} active="about" />
+      {/* No subtitle: it read "About" beside an About button that led here. */}
+      <SiteHeader counts={clusterCounts} active="about" measure="reading" />
 
-      {/* A reading page is a document: one column at its own measure, with no
-          map to hold a second pane. */}
+      {/* A reading page is a document: one column at its own measure, on paper,
+          with no map to hold a second pane. */}
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10"
+        className="reading mx-auto my-6 max-w-3xl px-4 py-8 sm:px-8 sm:py-10"
       >
         <h1 className="text-3xl">About this site</h1>
 

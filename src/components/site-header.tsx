@@ -15,14 +15,21 @@ export function SiteHeader({
   subtitle,
   counts = {},
   active,
+  measure = "wide",
 }: {
   subtitle?: string;
   /** Cluster counts for the drawer. Empty on the 404, which has no data to read. */
   counts?: Record<string, number>;
   active?: "search" | "list" | "about";
+  /**
+   * "reading" centres the band's tiles on the same 48rem column the page uses,
+   * so the two line up. "wide" spans, for pages whose content starts at the
+   * window edge.
+   */
+  measure?: "wide" | "reading";
 }) {
   return (
-    <div className="toolbar toolbar--doc">
+    <div className={`toolbar toolbar--doc${measure === "reading" ? " toolbar--reading" : ""}`}>
       <div className="toolbar-inner">
         <div className="tool tool-brand">
           <SiteMenu counts={counts} active={active} />
@@ -37,7 +44,13 @@ export function SiteHeader({
         {subtitle ? <span className="label hidden truncate lg:block">{subtitle}</span> : null}
 
         <div className="ms-auto flex flex-none items-center gap-2">
-          <Link href="/about" className="tool-btn">
+          {/* Marked rather than hidden on the About page: dropping it would
+              shuffle the row every time the reader lands there. */}
+          <Link
+            href="/about"
+            className="tool-btn"
+            aria-current={active === "about" ? "page" : undefined}
+          >
             About
           </Link>
           <AddSpaceButton />
