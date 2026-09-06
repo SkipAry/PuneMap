@@ -545,18 +545,77 @@
 }
 
 /*
-  The list is the same rows read down instead of across. It covers the map
-  because it replaces it, rather than sitting on it.
+  The list is the map's text equivalent, so it is never something a reader has
+  to go and find. From 820px it is always on screen: a column beside the
+  territory in map view, the full width in list view. A phone has room for one
+  or the other, and only there is it a switch.
 */
 .list-view {
   position: absolute;
   inset: calc(var(--toolbar-h) + 0.75rem) 0.75rem 4.5rem;
   z-index: 24;
-  display: flex;
+  display: none;
   flex-direction: column;
   overflow: hidden;
   max-width: 80rem;
   margin-inline: auto;
+}
+
+.list-view[data-view="list"] {
+  display: flex;
+}
+
+@media (min-width: 820px) {
+  :root {
+    --list-w: 384px;
+  }
+
+  .list-view {
+    display: flex;
+  }
+
+  /* Map view: a column down the start edge, territory beside it. */
+  .list-view[data-view="map"] {
+    inset-inline-end: auto;
+    width: var(--list-w);
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  /* The warning centres in what is left of the map, not under the column. */
+  .shell[data-view="map"] .notice-strip {
+    inset-inline-start: calc(var(--list-w) + 1.5rem);
+  }
+}
+
+@media (min-width: 1180px) {
+  :root {
+    --list-w: 416px;
+  }
+}
+
+/*
+  One column while the list is a sidebar, more when it has the width. Keyed to
+  the view rather than to the viewport: at 1100px the same window holds one
+  column beside a map and three without it.
+*/
+.list-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+@media (min-width: 700px) {
+  .list-view[data-view="list"] .list-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .list-view[data-view="list"] .list-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* MapLibre's own controls have to clear the band lying over them. */

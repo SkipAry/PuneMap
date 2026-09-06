@@ -97,7 +97,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  const [basemap, setBasemap] = useState<BasemapId>("light");
+  const [basemap, setBasemap] = useState<BasemapId>("voyager");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoverSlug, setHoverSlug] = useState<string | null>(null);
   const [view, setView] = useState<View>("map");
@@ -159,7 +159,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
 
   return (
     /* The map is the page. Everything else is chrome floating on it. */
-    <div className="shell fixed inset-0 overflow-hidden">
+    <div className="shell fixed inset-0 overflow-hidden" data-view={view}>
       <div className="shell-map absolute inset-0">
         {mapReady ? (
           <ListingMap
@@ -277,9 +277,12 @@ export function SearchShell({ all }: { all: Listing[] }) {
         </div>
       </div>
 
-      {/* ── The list. Same rows as the map, read down instead of across. ── */}
-      {view === "list" ? (
-        <div className="list-view panel">
+      {/*
+        The list is the map's text equivalent, so from 820px it is always on
+        screen - a column beside the territory in map view, the whole width in
+        list view. Only a phone, which has no room for both, hides it.
+      */}
+      <div className="list-view panel" data-view={view}>
           <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
             <h2 className="text-base font-bold">Matching listings</h2>
             <p className="ms-auto text-sm" aria-live="polite">
@@ -334,7 +337,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
               </div>
             ) : (
               <>
-                <div className="grid gap-2 p-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="list-grid">
                   {visible.map((listing) => (
                     <div
                       key={listing.slug}
@@ -365,13 +368,12 @@ export function SearchShell({ all }: { all: Listing[] }) {
               </>
             )}
           </div>
-        </div>
-      ) : null}
+      </div>
 
       {/*
-        Clusters along the bottom. They were here once, as loose chips that the
-        result panel covered two to four of at every width. There is no result
-        panel over the map any more, so they can come back - and they now sit
+        Clusters along the bottom. They were here once, as loose chips that a
+        panel covered two to four of at every width. The list column now stops
+        above them rather than over them, so they can come back - and they sit
         in one tray rather than floating individually.
       */}
       <div className="chipbar">

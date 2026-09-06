@@ -228,21 +228,26 @@ The map is the territory and it holds the whole screen. Every other surface is s
 it arrives when the user asks for it, does one job, and leaves. Nothing stands on screen
 holding ground it is not using.
 
-The map is full-bleed at every width. Exactly two pieces of chrome stand on it: a 60px
-band across the top carrying identity, the Map/List switch, the search field, Filters, the
-basemap switch and Add space; and a tray of cluster chips across the bottom. Both are
-translucent, so the territory reads through them. Everything else is summoned.
+The map is full-bleed at every width. Three surfaces stand on it: a 60px band across the
+top carrying identity, the Map/List switch, the search field, Filters, the basemap switch
+and Add space; a tray of cluster chips across the bottom; and the result list down the
+start edge. All three are translucent, so the territory reads through them. Everything
+else is summoned.
 
 Sections and clusters live off-canvas in a drawer behind one button. The filter set lives
 off-canvas in a second, wider drawer that slides in from the same edge. Both are native
 `<dialog>` elements, so the browser owns focus trapping, Esc and inertness, and both
 animate with a transform rather than with JavaScript holding the state.
 
-Two arrangements were tried and dropped on the way here. A standing 244px navigation rail
-spent a quarter of every wide screen on navigation almost nobody was using. A result
-column pinned down the left took a third of the map and carried a bank of six dials that
-read "Any" six times over before anyone had asked for anything. The list is now a view you
-switch to, not a panel you work around.
+The result list is the exception to summoning, and deliberately so: it is the map's text
+equivalent, so it is never something a reader has to go and find. From 820px it is always
+on screen — a column down the start edge in map view, the full width in list view. Only a
+phone, which has room for one or the other, makes it a switch.
+
+Two arrangements were dropped on the way here. A standing 244px navigation rail spent a
+quarter of every wide screen on navigation almost nobody was using. A result column
+carrying a bank of six dials showed "Any" six times over before anyone had asked for
+anything; the column stayed, the dials went.
 
 `/` is the one surface that is not the tool. It is a numbered document that argues for
 the tool, and it argues by running the real filter over the real listings rather than by
@@ -257,7 +262,7 @@ used identically on the map pin, the drawer row, the card dot and the cluster pa
 - Full-bleed map at every width; one band of controls on it, one tray of clusters
 - Every control in the band is its own translucent tile, not a compartment in a bar
 - Navigation and filters are drawers that slide from the same edge, never standing chrome
-- The list is a view you switch to, not a panel that permanently costs the map its width
+- The result list is always on screen from 820px; a switch only where a phone forces one
 - Nine zone hues carrying cluster identity across map, tray, drawer, cards and pages
 - One action blue (#1862dc) for controls, never for identity
 - Tabular figures on every comparable number, in fixed cells that never reorder
@@ -368,8 +373,12 @@ The map is `absolute inset-0` at every width. Over it:
   leaving menu, search, Filters and Add space, which fit 360px.
 - **The tray.** Centred at `bottom: 1rem`, scrolling horizontally, holding "All Pune" and
   every cluster with live stock. On a phone it also carries the Map/List switch.
-- **The list view** replaces the map when switched to: inset under the band and above the
-  tray, capped at 80rem, a one-to-three column card grid.
+- **The list.** Inset under the band and above the tray. From 820px it is always present:
+  384px wide down the start edge in map view (416px past 1180px), full width capped at
+  80rem in list view. Its card grid is keyed to the *view*, not the viewport — one column
+  as a sidebar, two from 700px and three from 1100px once it has the width — because at
+  1100px the same window holds one column beside a map and three without it. Below 820px
+  it is hidden in map view, and the tray's Map/List chip brings it back.
 - MapLibre's own controls sit top-left with a `margin-top` clearing the band.
 
 ### The document pages
@@ -404,8 +413,9 @@ result list pass, a list of section links does not.
 **The One Edge Rule.** Everything that slides, slides in from the inline start. Two
 drawers arriving from two different edges would make the user learn the interface twice.
 
-**The Two Pieces Rule.** The map carries a band and a tray, and nothing else stands on it.
-A third permanent surface has to displace one of those two, not join them.
+**The Standing Surfaces Rule.** The map carries a band, a tray and the result list, and
+nothing else stands on it. A fourth permanent surface has to displace one of those three,
+not join them.
 
 **The Reserved Height Rule.** Result cards declare `min-height: 148px` so a filter change
 reflows without shifting the page. CLS on the search screen is 0 and must stay 0.
