@@ -156,7 +156,8 @@ export default async function ShedPage({ params }: Params) {
           tabIndex={-1}
           className="detail-col mx-auto max-w-5xl px-4 pb-28 pt-6 panel:mx-0 panel:max-w-none panel:px-5 panel:pb-8"
         >
-        <p className="label mb-3">
+        {/* A trail of links is a breadcrumb only if it says so. */}
+        <nav aria-label="Breadcrumb" className="label mb-3">
           <Link href="/search" className="hover:text-ink">
             Search
           </Link>
@@ -164,7 +165,7 @@ export default async function ShedPage({ params }: Params) {
           <Link href={`/${clusterSlug(listing.cluster)}`} className="hover:text-ink">
             {listing.cluster}
           </Link>
-        </p>
+        </nav>
 
         {/* 1. Title block */}
         {/* One column. The locator sat in a second 320px track, which from

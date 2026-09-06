@@ -15,12 +15,15 @@ export function SiteHeader({
   subtitle,
   counts = {},
   active,
+  currentCluster,
   measure = "wide",
 }: {
   subtitle?: string;
   /** Cluster counts for the drawer. Empty on the 404, which has no data to read. */
   counts?: Record<string, number>;
   active?: "search" | "list" | "about";
+  /** Marks this cluster's own row in the drawer as the current page. */
+  currentCluster?: string;
   /**
    * "reading" centres the band's tiles on the same 48rem column the page uses,
    * so the two line up. "wide" spans, for pages whose content starts at the
@@ -32,7 +35,7 @@ export function SiteHeader({
     <div className={`toolbar toolbar--doc${measure === "reading" ? " toolbar--reading" : ""}`}>
       <div className="toolbar-inner">
         <div className="tool tool-brand">
-          <SiteMenu counts={counts} active={active} />
+          <SiteMenu counts={counts} active={active} currentCluster={currentCluster} />
           <Link
             href="/"
             className="hidden truncate pe-2.5 text-sm font-bold tracking-[-0.012em] sm:block"
@@ -53,7 +56,10 @@ export function SiteHeader({
           >
             About
           </Link>
-          <AddSpaceButton />
+          {/* Not on the page that already carries the form. It rendered a
+              second copy of all 21 fields inside a dialog, so the page held
+              two sets of controls with the same names. */}
+          {active === "list" ? null : <AddSpaceButton />}
         </div>
       </div>
     </div>

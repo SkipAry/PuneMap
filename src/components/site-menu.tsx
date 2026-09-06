@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { zoneOf } from "@/lib/clusters";
 import { CLUSTERS, clusterSlug } from "@/lib/types";
@@ -64,14 +64,23 @@ function Icon({ name, size = 15 }: { name: keyof typeof ICONS; size?: number }) 
 }
 
 export function SiteMenu({
-  active = "search",
+  active,
+  currentCluster,
   clusters = [],
   counts,
   onToggle,
   onFilters,
   activeFilters = 0,
 }: {
+  /*
+    No default. It used to default to "search", so every page that did not name
+    itself - the landing, privacy, a listing, the 404 - marked "Search the map"
+    as the current page and told a screen reader the reader was on the map.
+    A page that is not in this menu marks nothing.
+  */
   active?: "search" | "list" | "about";
+  /** A cluster page is a row in this menu, so it marks its own row. */
+  currentCluster?: string;
   /** Selected clusters, when the menu is filtering a live search. */
   clusters?: string[];
   counts: Record<string, number>;
@@ -88,6 +97,8 @@ export function SiteMenu({
   const ref = useRef<HTMLDialogElement>(null);
   // Tracked so unmounting mid-handoff cannot open a drawer on a dead tree.
   const handoff = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Mirrored only so the button can announce its state; the dialog owns the rest.
+  const [open, setOpen] = useState(false);
 
   const close = useCallback(() => ref.current?.close(), []);
 
@@ -111,12 +122,27 @@ export function SiteMenu({
         type="button"
         className="icon-btn"
         aria-label="Sections and clusters"
-        onClick={() => ref.current?.showModal()}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => {
+          ref.current?.showModal();
+          setOpen(true);
+        }}
       >
         <Icon name="menu" size={16} />
       </button>
 
-      <dialog ref={ref} className="drawer" onClick={onBackdropClick}>
+      {/*
+        onClose covers every way out - the close button, the backdrop, Escape,
+        and a row navigating away - because they all end in close(). React does
+        not map a dialog's toggle event, so opening sets the state at the click.
+      */}
+      <dialog
+        ref={ref}
+        className="drawer"
+        onClick={onBackdropClick}
+        onClose={() => setOpen(false)}
+      >
         <nav className="flex h-full flex-col p-2.5" aria-label="Sections and clusters">
           <div className="flex items-center gap-2 px-2 pb-3.5 pt-1">
             <span className="text-[0.9375rem] font-bold leading-tight tracking-[-0.012em]">
@@ -217,6 +243,7 @@ export function SiteMenu({
                   key={c}
                   href={`/${clusterSlug(c)}`}
                   className="cluster-row"
+                  aria-current={c === currentCluster ? "page" : undefined}
                   style={{ ["--zone" as string]: zoneOf(c) }}
                   onClick={close}
                 >

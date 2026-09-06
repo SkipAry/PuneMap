@@ -156,6 +156,12 @@ export function SearchShell({ all }: { all: Listing[] }) {
   const visible = displayed.slice(0, limit);
   const activeCount = activeFilterCount(filters);
 
+  /** What the tray's "All Pune" reset actually yields: everything not leased. */
+  const liveTotal = useMemo(
+    () => all.filter((l) => l.availability !== "Leased out").length,
+    [all],
+  );
+
   /* Counts are of what is actually on offer, matching the cluster pages. */
   const clusterCounts = useMemo(() => {
     const out: Record<string, number> = {};
@@ -208,6 +214,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
         <div className="toolbar-inner">
           <div className="tool tool-brand">
             <SiteMenu
+              active="search"
               clusters={filters.clusters}
               counts={clusterCounts}
               onToggle={toggleCluster}
@@ -425,7 +432,13 @@ export function SearchShell({ all }: { all: Listing[] }) {
             onClick={() => patch({ clusters: [] })}
           >
             All Pune
-            <span className="num opacity-70">{fmtNumber(all.length)}</span>
+            {/*
+              Counted the way every other chip in this tray counts, and the way
+              the list counts: what is actually on offer. It read the whole
+              table, so the tray said 60 beside a list saying 56 - the four
+              leased-out rows, which pressing this chip does not bring back.
+            */}
+            <span className="num opacity-70">{fmtNumber(liveTotal)}</span>
           </button>
 
           {CLUSTERS.filter((c) => clusterCounts[c]).map((c) => (

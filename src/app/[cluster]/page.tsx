@@ -88,7 +88,11 @@ export default async function ClusterPage({ params }: Params) {
 
   return (
     <>
-      <SiteHeader subtitle={`${cluster} · ${rows.length} available`} counts={clusterCounts} />
+      <SiteHeader
+        subtitle={`${cluster} · ${rows.length} available`}
+        counts={clusterCounts}
+        currentCluster={cluster}
+      />
 
       <div className="shell shell--detail">
         <main
