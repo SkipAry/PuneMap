@@ -10,7 +10,53 @@ import type { Listing } from "@/lib/types";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
+/** Fallback view, used only when not one listing carries coordinates. */
 const PUNE_CENTRE: [number, number] = [73.9, 18.66];
+
+/** The corners of the listings that have coordinates, or null if none do. */
+function boundsOf(listings: Listing[]): [[number, number], [number, number]] | null {
+  let w = Infinity;
+  let s = Infinity;
+  let e = -Infinity;
+  let n = -Infinity;
+  let found = false;
+
+  for (const l of listings) {
+    if (l.lat === null || l.lng === null) continue;
+    found = true;
+    w = Math.min(w, l.lng);
+    e = Math.max(e, l.lng);
+    s = Math.min(s, l.lat);
+    n = Math.max(n, l.lat);
+  }
+
+  return found ? [[w, s], [e, n]] : null;
+}
+
+/**
+ * The chrome standing on the map, so the opening view frames the pins inside
+ * what is actually visible rather than behind the list column and the tray.
+ * The column width is read from --list-w rather than repeated here, and is
+ * simply absent below the breakpoint where the column appears.
+ */
+function chromePadding() {
+  const listW = Number.parseInt(
+    getComputedStyle(document.documentElement).getPropertyValue("--list-w"),
+    10,
+  );
+
+  // The sample-data warning is conditional and sits under the band, so its
+  // height is measured rather than assumed - it is 0 once real listings land.
+  const notice = document.querySelector(".notice-strip");
+  const noticeH = notice ? Math.round(notice.getBoundingClientRect().height) : 0;
+
+  return {
+    top: 76 + (noticeH > 8 ? noticeH + 12 : 0),
+    bottom: 96,
+    left: Number.isFinite(listW) ? listW + 24 : 24,
+    right: 24,
+  };
+}
 
 /** Pin size reads built-up area before the user reads anything. */
 const RADIUS_BY_AREA: maplibregl.ExpressionSpecification = [
@@ -112,6 +158,8 @@ export default function ListingMap({
   onSelectRef.current = onSelect;
   const listingsRef = useRef(listings);
   listingsRef.current = listings;
+  // Read once when the map is built, so the opening style is the chosen one.
+  const basemapRef = useRef(basemap);
 
   /** Source and layers are re-added whenever the basemap style swaps them out. */
   const addLayers = (instance: MapLibreMap) => {
@@ -245,7 +293,9 @@ export default function ListingMap({
       center: PUNE_CENTRE,
       zoom: 8.8,
       attributionControl: { compact: true },
-      style: basemapStyle("light"),
+      // The basemap the shell already chose. Opening on another one and
+      // swapping costs a style load and shows the wrong map while it happens.
+      style: basemapStyle(basemapRef.current),
     });
 
     // Top-left, under the toolbar: the bottom of the map is the cluster tray's.
@@ -254,6 +304,23 @@ export default function ListingMap({
     instance.on("load", () => {
       addLayers(instance);
       ready.current = true;
+
+      /*
+        Open on the stock rather than on a fixed view of Maharashtra. Fitted
+        once, on first load: after that the viewport is the user's, and a
+        filter change must never move the map under them.
+
+        maxZoom stops a single surviving listing from opening at street level,
+        where a lone pin says nothing about where it is.
+      */
+      const bounds = boundsOf(listingsRef.current);
+      if (bounds) {
+        instance.fitBounds(bounds, {
+          padding: chromePadding(),
+          maxZoom: 11.5,
+          animate: false,
+        });
+      }
     });
 
     // A style swap wipes custom sources, so they are re-added each time.
@@ -273,7 +340,8 @@ export default function ListingMap({
 
   useEffect(() => {
     const instance = map.current;
-    if (!instance || !ready.current) return;
+    if (!instance || !ready.current || basemap === basemapRef.current) return;
+    basemapRef.current = basemap;
     instance.setStyle(basemapStyle(basemap) as never);
   }, [basemap]);
 
