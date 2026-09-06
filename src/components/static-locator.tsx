@@ -219,9 +219,11 @@ export function StaticLocator({
           plot: a listing near an edge would otherwise hang its label off it,
           and SVG text neither wraps nor shrinks to fit.
         */}
+        {/* Offset past the mark's arms (30 units) rather than past the dot, or
+            the first line of the label is struck through by the crosshair. */}
         <g
-          transform={`translate(${Math.min(Math.max(cx + 12, 14), W - 230)} ${Math.min(
-            Math.max(cy < 70 ? cy + 32 : cy - 26, 52),
+          transform={`translate(${Math.min(Math.max(cx + 36, 14), W - 230)} ${Math.min(
+            Math.max(cy < 70 ? cy + 48 : cy - 38, 52),
             H - 58,
           )})`}
         >

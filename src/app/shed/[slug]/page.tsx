@@ -325,7 +325,9 @@ export default async function ShedPage({ params }: Params) {
         {similar.length > 0 ? (
           <section className="mt-8">
             <h2 className="group-heading">Similar sheds in {listing.cluster}</h2>
-            <div className="grid gap-2 md:grid-cols-3">
+            {/* One column, for the same reason as the cluster page: three
+                cards in a 544px column leaves 176px for five spec cells. */}
+            <div className="grid gap-2">
               {similar.map((s) => (
                 <ListingCard key={s.slug} listing={s} />
               ))}

@@ -142,7 +142,10 @@ export default async function ClusterPage({ params }: Params) {
 
         <section className="mt-8">
           <h2 className="group-heading">Every {cluster} listing</h2>
-          <div className="grid gap-2 md:grid-cols-2">
+          {/* One column. These cards sit in a 544px reading column, not in the
+              viewport, so a viewport-keyed md:grid-cols-2 put a five-cell spec
+              strip in 248px and ellipsed the height and power off every card. */}
+          <div className="grid gap-2">
             {rows.map((l) => (
               <ListingCard key={l.slug} listing={l} />
             ))}
