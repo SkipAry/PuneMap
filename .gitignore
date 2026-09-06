@@ -12,3 +12,9 @@ next-env.d.ts
 
 # Impeccable live-overlay runtime artifact
 .impeccable/live/
+
+# Impeccable run-state: rebuilt on every run, meaningless to anyone else.
+# design.json, surfaces/ and critique/ stay tracked - those are the record.
+.impeccable/questions/
+.impeccable/build/
+.impeccable/hook.cache.json
