@@ -469,8 +469,14 @@
   color: var(--color-faint);
 }
 
-/* The sample-data warning belongs under the bar, not inside the tray. */
+/*
+  The sample-data warning lives inside the result list, where the inventory it
+  is warning about is presented. This floating copy is for the single case with
+  no list on screen to hold it: a phone looking at the map. Anywhere else it
+  would land on top of the list's own header.
+*/
 .notice-strip {
+  display: none;
   position: absolute;
   inset-inline: 0.75rem;
   top: calc(var(--toolbar-h) + 0.75rem);
@@ -479,8 +485,10 @@
   margin-inline: auto;
 }
 
-.notice-strip:empty {
-  display: none;
+@media (max-width: 819px) {
+  .shell[data-view="map"] .notice-strip {
+    display: block;
+  }
 }
 
 /* The cluster tray. One container, scrolling horizontally, centred. */
@@ -582,10 +590,6 @@
     margin-inline: 0;
   }
 
-  /* The warning centres in what is left of the map, not under the column. */
-  .shell[data-view="map"] .notice-strip {
-    inset-inline-start: calc(var(--list-w) + 1.5rem);
-  }
 }
 
 @media (min-width: 1180px) {

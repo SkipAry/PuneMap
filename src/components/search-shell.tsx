@@ -269,8 +269,8 @@ export function SearchShell({ all }: { all: Listing[] }) {
         </div>
       </div>
 
-      {/* Reads the whole set, not the filtered page: a count and a map full of
-          pins imply real inventory whatever the current filters show. */}
+      {/* The same warning, for the one case with no list to put it in: a phone
+          looking at the map. */}
       <div className="notice-strip">
         <div className="panel overflow-hidden">
           <SampleNotice listings={all} />
@@ -289,6 +289,10 @@ export function SearchShell({ all }: { all: Listing[] }) {
               {countLine}
             </p>
           </div>
+
+          {/* Reads the whole set, not the filtered page: a count and a map full
+              of pins imply real inventory whatever the filters currently show. */}
+          <SampleNotice listings={all} />
 
           {/* What the null contract cost, and the one control that reverses it. */}
           {!filters.loose && result.nullExclusions.length > 0 ? (
