@@ -47,7 +47,8 @@ export function StaticLocator({
 }: {
   listing: Listing;
   context: Listing[];
-  height?: number;
+  /** A number of pixels, or a CSS length when the locator fills a pane. */
+  height?: number | string;
 }) {
   const points = context.filter((l) => l.lat !== null && l.lng !== null);
 

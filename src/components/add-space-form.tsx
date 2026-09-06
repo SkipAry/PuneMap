@@ -73,7 +73,7 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
               Done
             </button>
           ) : (
-            <a className="btn-action" href="/">
+            <a className="btn-action" href="/search">
               Back to the map
             </a>
           )}

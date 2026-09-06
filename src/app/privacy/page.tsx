@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { SearchRail } from "@/components/search-rail";
 import { SiteHeader } from "@/components/site-header";
+import { railCounts } from "@/lib/rail-counts";
 import {
   CONTACT_EMAIL,
   OPERATOR_NAME,
@@ -33,13 +35,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  * parties are the only two origins a browser contacts, and the "no cookies"
  * claim was checked in a browser rather than assumed.
  */
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const clusterCounts = await railCounts();
   const operator = OPERATOR_NAME ?? "the site operator";
 
   return (
     <>
-      <SiteHeader subtitle="Privacy" />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-3xl px-4 py-8">
+      <div className="panel:hidden">
+        <SiteHeader subtitle="Privacy" />
+      </div>
+
+      <div className="shell shell--reading panel:fixed panel:inset-0 panel:overflow-hidden">
+        <SearchRail counts={clusterCounts} />
+
+        <main
+          id="main"
+          tabIndex={-1}
+          className="detail-col mx-auto max-w-3xl px-4 py-8 panel:px-8 panel:py-10"
+        >
         <h1 className="text-3xl">What we collect, and why</h1>
 
         {!OPERATOR_READY ? (
@@ -156,7 +169,8 @@ export default function PrivacyPage() {
         </Section>
 
         <p className="label mt-8">Last updated {POLICY_UPDATED}</p>
-      </main>
+        </main>
+      </div>
     </>
   );
 }

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AvailabilityTag, ListingCard } from "@/components/listing-card";
+import { SearchRail } from "@/components/search-rail";
+import { railCounts } from "@/lib/rail-counts";
 import { SiteHeader } from "@/components/site-header";
 import { StaticLocator } from "@/components/static-locator";
 import { getListingBySlug, getListings } from "@/lib/data";
@@ -98,6 +100,8 @@ export default async function ShedPage({ params }: Params) {
   const rate = effectiveRatePerSqft(listing);
   const rent = effectiveMonthlyRent(listing);
   const sample = isSampleListing(listing);
+
+  const clusterCounts = await railCounts();
   const similar = similarListings(all, listing);
 
   // Machine-readable specs, so the numbers a portal buries in prose are structured here.
@@ -131,16 +135,26 @@ export default async function ShedPage({ params }: Params) {
 
   return (
     <>
-      <SiteHeader subtitle={`${listing.cluster} · ${listing.property_type}`} />
+      {/* Phone only: from 820px the rail carries identity and navigation. */}
+      <div className="panel:hidden">
+        <SiteHeader subtitle={`${listing.cluster} · ${listing.property_type}`} />
+      </div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* pb-28 clears the fixed call bar so the last section is never trapped. */}
-      <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 pb-28 pt-6 md:pb-6">
+      <div className="shell shell--detail panel:fixed panel:inset-0 panel:overflow-hidden">
+        <SearchRail counts={clusterCounts} />
+
+        {/* pb-28 clears the fixed call bar so the last section is never trapped. */}
+        <main
+          id="main"
+          tabIndex={-1}
+          className="detail-col mx-auto max-w-5xl px-4 pb-28 pt-6 panel:mx-0 panel:max-w-none panel:px-5 panel:pb-8"
+        >
         <p className="label mb-3">
-          <Link href="/" className="hover:text-ink">
+          <Link href="/search" className="hover:text-ink">
             Search
           </Link>
           {" / "}
@@ -150,7 +164,10 @@ export default async function ShedPage({ params }: Params) {
         </p>
 
         {/* 1. Title block */}
-        <section className="grid gap-4 md:grid-cols-[1fr_320px]">
+        {/* One column. The locator sat in a second 320px track, which from
+            820px is empty because the third pane holds it - and an override
+            lost the ordering fight, so the track is gone rather than fought. */}
+        <section className="grid gap-4">
           <div>
             <div className="flex items-baseline justify-between gap-3">
               <p className="label flex items-center gap-2">
@@ -197,7 +214,10 @@ export default async function ShedPage({ params }: Params) {
               </div>
             ) : null}
           </div>
-          <StaticLocator listing={listing} context={all} />
+          {/* Phone keeps the locator inline; wider, it becomes the third pane. */}
+          <div className="panel:hidden">
+            <StaticLocator listing={listing} context={all} />
+          </div>
         </section>
 
         {/* 2. Full spec table */}
@@ -315,7 +335,17 @@ export default async function ShedPage({ params }: Params) {
             </div>
           </section>
         ) : null}
-      </main>
+        </main>
+
+        {/*
+          The third pane. Inline SVG rather than a tile map, so the page a
+          search engine reads and the page someone reads with JavaScript off are
+          the same page.
+        */}
+        <div className="detail-map hidden panel:block">
+          <StaticLocator listing={listing} context={all} height="100%" />
+        </div>
+      </div>
 
       {/*
         On a phone the call sits below several screens of specification, so it
