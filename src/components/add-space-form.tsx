@@ -111,12 +111,17 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
               The pattern only bars what is definitely not a phone number:
               minLength alone accepted "abcdefghij". Spaces, +, - and brackets
               all stay legal, because people write numbers the way they write
-              them and the server is what actually decides. */}
+              them and the server is what actually decides.
+
+              The brackets are escaped because the browser compiles this with
+              the `v` flag, where an unescaped ( or ) inside a character class
+              is a syntax error - the whole pattern is then discarded and the
+              field silently validates nothing. */}
           <input
             name="contact_phone"
             required
             minLength={10}
-            pattern="[0-9+()\-\s]{10,}"
+            pattern="[0-9+\(\)\-\s]{10,}"
             title="Digits, with spaces, +, brackets or dashes if you like."
             type="tel"
             inputMode="tel"

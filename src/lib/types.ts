@@ -59,9 +59,14 @@ export const PROPERTY_TYPES = [
   "Industrial plot",
 ] as const;
 
+/*
+  "Tremix" is the same floor as "Trimix", spelled the other way. Offering both
+  split one floor type across two buckets: the filter matched 27 listings under
+  one spelling and 0 under the other, and the submission form let a broker file
+  a Trimix floor where no search would find it.
+*/
 export const FLOORING_TYPES = [
   "Trimix",
-  "Tremix",
   "VDF",
   "Epoxy",
   "Plain RCC",
