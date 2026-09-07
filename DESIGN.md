@@ -456,10 +456,20 @@ desktop — it is the map's accessible equivalent.
 **The Unlayered Cascade Rule.** A component class that sets `display` is shown and hidden
 with a plain media query, never with `hidden` / `md:hidden`. These classes are unlayered
 and beat Tailwind's layered utilities, so the utility silently loses and the element stays
-on screen at a width it has no business being at. This has now happened five times —
-`.rail` twice, `.call-bar`, `.tool-seg`, `.tool-btn` — and it never announces itself,
-because nothing errors. When a component class and a utility disagree about the same
-property, delete the losing declaration rather than stacking an override on it.
+on screen at a width it has no business being at. This has now happened six times —
+`.rail` twice, `.call-bar`, `.tool-seg`, `.tool-btn`, and `.chipbar-tray .chip` — and it
+never announces itself, because nothing errors. When a component class and a utility
+disagree about the same property, delete the losing declaration rather than stacking an
+override on it.
+
+The sixth was not `display` but `background`, and it is the worst of them: an unlayered
+`background: transparent` on the tray's chips beat the layered `.chip[aria-pressed="true"]`
+that paints the selected fill. The white text survived, the ink did not, and the chip
+naming the reader's current filter went blank. The default screen has one chip pressed, so
+this shipped on the front door. **The rule is not about `display`. It is about any property
+an unlayered component class and a layered rule both set** — including the state variants
+of a class the component is restyling. Restyle a component in a tray, restyle its states
+in the same place.
 
 **The Container, Not The Window Rule.** A grid inside a fixed-width column is keyed to that
 column, never to the viewport. `md:grid-cols-2` in a 544px reading column gives each card
@@ -701,8 +711,16 @@ landed on top of the list's own heading and count.
 - **Don't** give navigation permanent width. If it is not being used, it is off-canvas.
 - **Don't** introduce a second edge for things to slide from.
 - **Don't** put a monogram beside the wordmark.
-- **Don't** hide a component class with a Tailwind utility. Unlayered CSS wins; use a
-  media query in the same stylesheet. Five times now.
+- **Don't** hide or repaint a component class with a Tailwind utility. Unlayered CSS wins;
+  use a media query in the same stylesheet. Six times now — and the sixth was a colour,
+  not a `display`.
+- **Don't** restyle a component inside a container without restyling its pressed, checked
+  and current states there too. The base rule is unlayered and wins; the state rule is
+  layered and loses, so the selected thing renders as the unselected thing wearing the
+  selected thing's text colour.
+- **Don't** put a map control in the top-left. That corner belongs to the list column on
+  desktop and the sample-data strip on a phone. The zoom buttons were covered at every
+  width, and a snapshot of the DOM will not tell you — only `elementFromPoint` will.
 - **Don't** let a page set its body copy straight onto the ground. Content goes on paper.
 - **Don't** trust a grep of the HTML to tell you what a page looks like. The search screen
   sat on its loading fallback in production while every route check returned 200, and the
