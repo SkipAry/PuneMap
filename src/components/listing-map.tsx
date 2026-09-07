@@ -328,8 +328,9 @@ export default function ListingMap({
       style: basemapStyle(appliedBasemap.current),
     });
 
-    // Top-left, under the toolbar: the bottom of the map is the cluster tray's.
-    instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    // End edge, under the toolbar: the start edge is the list column's and the
+    // bottom is the cluster tray's, which leaves this the one free corner.
+    instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
     addInteractions(instance);
 
