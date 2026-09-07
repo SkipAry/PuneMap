@@ -46,7 +46,10 @@ export function SiteHeader({
 
         {subtitle ? <span className="label hidden truncate lg:block">{subtitle}</span> : null}
 
-        <div className="ms-auto flex flex-none items-center gap-2">
+        {/* Shrinkable rather than fixed. At 200% text the two controls together
+            were wider than the phone and pushed the whole document sideways;
+            they now give way, and the button clips its own label last. */}
+        <div className="ms-auto flex min-w-0 items-center gap-2">
           {/* Marked rather than hidden on the About page: dropping it would
               shuffle the row every time the reader lands there. */}
           <Link

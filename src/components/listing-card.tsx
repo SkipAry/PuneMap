@@ -112,12 +112,18 @@ export function ListingCard({ listing, active = false, onHover, onSelect }: Prop
       onMouseLeave={onHover ? () => onHover(null) : undefined}
       onClick={onSelect ? () => onSelect(listing.slug) : undefined}
     >
-      <div className="flex items-start justify-between gap-2">
+      {/* Wraps rather than overflows: the tags cannot shrink and the locality
+          already truncates, so at large text sizes the row had nothing left to
+          give and pushed the card past its track. */}
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="label flex min-w-0 items-center gap-1.5">
           <span className="chip-dot" aria-hidden="true" />
           <span className="truncate">{listing.locality ?? listing.cluster}</span>
         </p>
-        <span className="flex shrink-0 items-center gap-1">
+        {/* The two tags are each nowrap, so together they were wider than the
+            card at large text sizes and no amount of wrapping above them
+            helped. They may stack on each other instead. */}
+        <span className="flex flex-wrap items-center justify-end gap-1">
           {isSampleListing(listing) ? <SampleTag /> : null}
           <AvailabilityTag value={listing.availability} />
         </span>

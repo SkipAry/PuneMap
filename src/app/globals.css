@@ -81,14 +81,57 @@
     font-size: var(--text-base);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    /* Free where the stack resolves to a face with an optical-size axis, which
+       on Apple platforms it does, and a no-op everywhere else. */
+    font-optical-sizing: auto;
   }
 
+  /*
+    Tracking and leading are size-specific: letters read too far apart as they
+    grow and too close as they shrink, so one value cannot serve a 30px h1 and
+    a 15px h3 - it was loose on one and tight on the other. As size goes up,
+    tracking goes more negative and leading tightens.
+
+    Only tracking and leading here, never font-size: several pages set their
+    own size on a heading, and a base size would fight them.
+
+    The small end of the ramp is elsewhere and stays positive: .label sets
+    +0.01em at 12px. If a heading rule ever swallows it, that is the same
+    mistake in the other direction.
+  */
+  /*
+    Leading here is the fallback. Every heading that carries a text-* utility
+    takes that utility's paired line-height instead, and Tailwind's own ramp
+    already tightens as size grows. Tracking is the half that lands everywhere,
+    because a size utility does not set letter-spacing.
+  */
   h1,
   h2,
   h3 {
+    /*
+      A reader at 200% text size reads this page in a third of the room. Long
+      words in a heading were running past their box and giving the whole
+      document a horizontal scroll.
+    */
+    overflow-wrap: break-word;
+  }
+
+  h1 {
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+  }
+
+  h2 {
     font-weight: 700;
     line-height: 1.15;
-    letter-spacing: -0.018em;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -137,9 +180,24 @@
 
   .spec-cell {
     min-width: 0;
-    padding: 6px 6px 5px;
+    /* Padding in em so a reader at 200% text does not get glyphs touching the
+       tile edge - the cell is sized by the text it holds. */
+    padding: 0.4em 0.4em 0.34em;
     border-radius: 8px;
     background: rgba(16, 24, 40, 0.035);
+  }
+
+  /*
+    The value already clipped; the label did not, so at large text sizes it
+    pushed the cell wider than its track and the page scrolled sideways. Both
+    ends of the cell clip now - the strip is built to be read at a glance and
+    to be truncated when there is no room, which is why the value carries a
+    title attribute.
+  */
+  .spec-cell > dt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .spec-value {
@@ -545,6 +603,18 @@
   cursor: pointer;
   white-space: nowrap;
   transition: background 120ms ease, border-color 120ms ease, transform 100ms ease-out;
+}
+
+/*
+  The band's controls clip their own labels before the page scrolls sideways.
+  A nowrap button in a row that could not shrink was the last thing giving the
+  document a horizontal scroll at 200% text.
+*/
+.toolbar-inner .btn-action,
+.toolbar-inner .tool-btn {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tool-btn:active {

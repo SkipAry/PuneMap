@@ -143,7 +143,9 @@ export default async function ClusterPage({ params }: Params) {
         <dl className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {facts.map((f) => (
             <div key={f.label} className="card px-3 py-2.5">
-              <dd className="num text-lg">{f.value}</dd>
+              {/* A range like 8,000–2,50,000 is one unbreakable token; at large
+                  text sizes it ran past its tile. It may break when it has to. */}
+              <dd className="num text-lg [overflow-wrap:anywhere]">{f.value}</dd>
               <dt className="label mt-1">
                 {f.label}
                 <span className="block">{f.note}</span>
