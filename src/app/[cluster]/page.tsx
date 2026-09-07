@@ -25,6 +25,16 @@ function statedRange(rows: Listing[], pick: (l: Listing) => number | null) {
   return { min: Math.min(...values), max: Math.max(...values), n: values.length };
 }
 
+/**
+ * A range reads as a range only when the ends differ. One listing, or several
+ * that agree, produced "12–12m" and "80,000–80,000".
+ */
+function span(r: { min: number; max: number }, fmt: (n: number) => string) {
+  return r.min === r.max ? fmt(r.min) : `${fmt(r.min)}–${fmt(r.max)}`;
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { cluster: slug } = await params;
   const cluster = clusterFromSlug(slug);
@@ -37,7 +47,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const title = `Industrial sheds and warehouses on rent in ${cluster}, Pune`;
   const description =
     `${rows.length} industrial ${rows.length === 1 ? "property" : "properties"} available on rent in ${cluster}` +
-    (area ? `, from ${fmtArea(area.min)} to ${fmtArea(area.max)}` : "") +
+    (area
+      ? area.min === area.max
+        ? `, at ${fmtArea(area.min)}`
+        : `, from ${fmtArea(area.min)} to ${fmtArea(area.max)}`
+      : "") +
     `. Filter by clear height, crane capacity, sanctioned power, flooring and docks.`;
 
   return {
@@ -59,29 +73,34 @@ export default async function ClusterPage({ params }: Params) {
   const clusterCounts = await railCounts();
 
   const height = statedRange(rows, (l) => l.height_m);
-  const crane = statedRange(rows, (l) => l.crane_capacity_ton);
+  /*
+    A crane of 0 tons is the gantry-provision cast, not a crane. Counting it
+    printed "0–30T", and the product's rule is that a spec is never shown as 0 -
+    the card for that same listing reads "Prov.".
+  */
+  const crane = statedRange(rows, (l) => (l.crane_capacity_ton ? l.crane_capacity_ton : null));
   const power = statedRange(rows, (l) => l.power_hp);
   const area = statedRange(rows, (l) => l.total_builtup);
 
   const facts: { label: string; value: string; note: string }[] = [
     {
       label: "built-up",
-      value: area ? `${fmtNumber(area.min)}–${fmtNumber(area.max)}` : "—",
-      note: area ? `sq ft, across ${area.n} listings` : "not stated",
+      value: area ? span(area, fmtNumber) : "—",
+      note: area ? `sq ft, across ${plural(area.n, "listing", "listings")}` : "not stated",
     },
     {
       label: "clear height",
-      value: height ? `${height.min}–${height.max}m` : "—",
+      value: height ? `${span(height, String)}m` : "—",
       note: height ? `stated on ${height.n} of ${rows.length}` : "not stated",
     },
     {
       label: "crane",
-      value: crane ? `${crane.min}–${crane.max}T` : "—",
+      value: crane ? `${span(crane, String)}T` : "—",
       note: crane ? `stated on ${crane.n} of ${rows.length}` : "not stated",
     },
     {
       label: "power",
-      value: power ? `${fmtNumber(power.min)}–${fmtNumber(power.max)}` : "—",
+      value: power ? span(power, fmtNumber) : "—",
       note: power ? `HP, stated on ${power.n} of ${rows.length}` : "not stated",
     },
   ];
@@ -140,7 +159,8 @@ export default async function ClusterPage({ params }: Params) {
 
         <p className="mt-5">
           <Link href={`/search?cluster=${slug}`} className="btn-action btn-action--wrap">
-            Filter these {rows.length} listings by height, crane and power →
+            Filter {rows.length === 1 ? "this listing" : `these ${rows.length} listings`} by
+            height, crane and power →
           </Link>
         </p>
 

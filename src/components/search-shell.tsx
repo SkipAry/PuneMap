@@ -179,14 +179,28 @@ export function SearchShell({ all }: { all: Listing[] }) {
         : [...filters.clusters, c],
     });
 
-  const countLine = (
-    <>
-      <span className="num">{fmtNumber(result.total)}</span>{" "}
-      <span className="text-muted">
-        {result.total === 1 ? "match" : "matches"} of {fmtNumber(all.length)}
-      </span>
-    </>
-  );
+  /*
+    The universe the reader is actually looking at. It counted the whole table,
+    so an unfiltered screen read "56 matches of 60" beside a tray reading
+    "All Pune 56", with no active filter to explain the four missing rows -
+    they were the leased-out ones, which this screen hides until asked.
+  */
+  const universe = filters.includeLeased ? all.length : liveTotal;
+
+  const countLine =
+    result.total === universe ? (
+      <>
+        <span className="num">{fmtNumber(universe)}</span>{" "}
+        <span className="text-muted">{universe === 1 ? "listing" : "listings"}</span>
+      </>
+    ) : (
+      <>
+        <span className="num">{fmtNumber(result.total)}</span>{" "}
+        <span className="text-muted">
+          {result.total === 1 ? "match" : "matches"} of {fmtNumber(universe)}
+        </span>
+      </>
+    );
 
   return (
     /* The map is the page. Everything else is chrome floating on it. */
