@@ -178,11 +178,23 @@
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
-    transition: border-color 120ms ease, background 120ms ease;
+    transition: border-color 120ms ease, background 120ms ease, transform 100ms ease-out;
   }
 
   .chip:hover {
     border-color: var(--color-ink);
+  }
+
+  /*
+    Hover does not exist on a phone, so a press state is the only feedback a
+    thumb ever gets. Every control on the site had one hover rule and no active
+    rule, which meant a tap changed nothing at all until the screen did - and
+    Tailwind's preflight zeroes -webkit-tap-highlight-color, so the browser's
+    own fallback flash was suppressed too.
+  */
+  .chip:active {
+    transform: scale(0.97);
+    background: rgba(16, 24, 40, 0.09);
   }
 
   .chip[aria-pressed="true"] {
@@ -222,11 +234,16 @@
     cursor: pointer;
     white-space: nowrap;
     box-shadow: var(--shadow-raised);
-    transition: filter 120ms ease;
+    transition: filter 120ms ease, transform 100ms ease-out;
   }
 
   .btn-action:hover {
     filter: brightness(1.08);
+  }
+
+  .btn-action:active {
+    transform: scale(0.97);
+    filter: brightness(0.96);
   }
 
   /*
@@ -253,10 +270,16 @@
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease, transform 100ms ease-out;
   }
 
   .btn-quiet:hover {
     border-color: var(--color-ink);
+  }
+
+  .btn-quiet:active {
+    transform: scale(0.97);
+    background: rgba(16, 24, 40, 0.05);
   }
 
   /*
@@ -266,14 +289,41 @@
     generated interface.
   */
   .card {
+    position: relative;
     background: #fff;
     border: 1px solid var(--color-line);
     border-radius: 14px;
-    transition: box-shadow 140ms ease;
+    transition: transform 100ms ease-out;
   }
 
-  .card:hover {
+  /*
+    The lift is a pseudo-element's opacity rather than the card's own shadow.
+    Transitioning box-shadow repaints, and this list runs to 56 cards on one
+    screen; opacity on an already-painted layer composites.
+  */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
     box-shadow: var(--shadow-panel);
+    opacity: 0;
+    transition: opacity 140ms ease;
+    pointer-events: none;
+  }
+
+  .card:hover::after {
+    opacity: 1;
+  }
+
+  /*
+    Only where pressing the card does something. On the search screen a card
+    selects itself on the map; on a cluster page it is an article whose title
+    is the link, and a press state on the whole card would promise an action
+    that is not there.
+  */
+  .card[data-selectable]:active {
+    transform: scale(0.995);
   }
 
   .card[data-active="true"] {
@@ -488,6 +538,12 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 120ms ease, border-color 120ms ease, transform 100ms ease-out;
+}
+
+.tool-btn:active {
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.99);
 }
 
 .tool-btn[aria-pressed="true"],
@@ -625,9 +681,86 @@
   color: #fff;
 }
 
+/*
+  The press state has to be written here too, and after the pressed rule. The
+  layered .chip:active loses to this block's unlayered `background`, the same
+  way the layered pressed fill did - that is the sixth occurrence of the trap,
+  now caught before shipping rather than after.
+*/
+.chipbar-tray .chip:active {
+  transform: scale(0.97);
+  background: rgba(16, 24, 40, 0.12);
+}
+
+.chipbar-tray .chip[aria-pressed="true"]:active {
+  background: var(--zone, var(--color-ink));
+  filter: brightness(0.86);
+}
+
 .chip--view {
   background: var(--color-ink) !important;
   color: #fff;
+}
+
+/*
+  Touch sizing. Every control on the site sat between 29px and 40px tall, under
+  the 44px a thumb needs. Hit padding was the alternative and it is wrong here:
+  the band's tiles sit 8px apart, so 5px of invisible padding either side would
+  make neighbouring targets overlap, which is worse than a small one.
+
+  So the controls grow and the band grows with them. Everything positioned
+  against the band reads --band-h, so the strip, the list column and the map's
+  own controls follow on their own.
+*/
+@media (pointer: coarse) {
+  :root {
+    /*
+      9px padding either side of a 50px brand tile, plus the band's 1px rule.
+      The tile is 50 and not 48: a 44px button inside .tool's 2px padding and
+      its 1px border. Measured, after assuming 48 and being two pixels wrong.
+    */
+    --band-h: 69px;
+  }
+
+  .toolbar-inner {
+    min-height: 50px;
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .chip,
+  .tool-btn,
+  .btn-action,
+  .btn-quiet,
+  .tool-field > input,
+  .input,
+  .rail-link,
+  .cluster-row {
+    min-height: 44px;
+  }
+
+  /*
+    Written out again for the tray. `.chipbar-tray .chip` sets min-height: 28px
+    and outranks the bare `.chip` above on specificity, so the cluster chips -
+    the most-tapped controls on the phone - kept their 34px. Seventh time this
+    file has hidden a rule behind a container selector.
+  */
+  .chipbar-tray .chip {
+    min-height: 44px;
+  }
+
+  /* The zoom buttons are 44px wide now, so the strip leaves them more room. */
+  .shell[data-view="map"] .notice-strip {
+    inset-inline: 0.75rem 4rem;
+  }
+
+  /* The tray is 12px taller, so the list column gives it the room. */
+  .list-view {
+    inset-block-end: 6rem;
+  }
 }
 
 .scrollbar-none {
@@ -829,10 +962,16 @@ dialog.drawer[open]::backdrop {
   background: transparent;
   color: var(--color-ink);
   cursor: pointer;
+  transition: background 120ms ease, transform 100ms ease-out;
 }
 
 .icon-btn:hover {
   background: rgba(16, 24, 40, 0.06);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+  background: rgba(16, 24, 40, 0.12);
 }
 
 .rail-link {
@@ -861,6 +1000,10 @@ dialog.drawer[open]::backdrop {
   background: rgba(16, 24, 40, 0.045);
 }
 
+.rail-link:active {
+  background: rgba(16, 24, 40, 0.1);
+}
+
 .rail-link[aria-current="page"] {
   background: rgba(24, 98, 220, 0.1);
   color: var(--color-action);
@@ -886,6 +1029,10 @@ dialog.drawer[open]::backdrop {
 
 .cluster-row:hover {
   background: rgba(16, 24, 40, 0.045);
+}
+
+.cluster-row:active {
+  background: rgba(16, 24, 40, 0.1);
 }
 
 .cluster-row[aria-pressed="true"] {

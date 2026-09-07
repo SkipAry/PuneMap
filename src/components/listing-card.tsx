@@ -101,6 +101,10 @@ export function ListingCard({ listing, active = false, onHover, onSelect }: Prop
       id={`card-${listing.slug}`}
       data-slug={listing.slug}
       data-active={active || undefined}
+      /* Carries the press state, and only where the press does something: on
+         the search screen the card selects itself on the map, on a cluster page
+         it is an article whose title is the link. */
+      data-selectable={onSelect ? "" : undefined}
       className="card result-card px-3 py-3"
       // The locality dot is the card's zone carrier.
       style={{ ["--zone" as string]: zoneOf(listing.cluster) }}
@@ -124,7 +128,7 @@ export function ListingCard({ listing, active = false, onHover, onSelect }: Prop
             text line is only 22px tall. */}
         <Link
           href={`/shed/${listing.slug}`}
-          className="inline-block py-0.5 hover:text-action"
+          className="inline-block py-0.5 transition-opacity hover:text-action active:text-action active:opacity-60"
         >
           {listingTitle(listing)}
         </Link>

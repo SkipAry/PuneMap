@@ -95,16 +95,10 @@ export function SiteMenu({
   onToggle?: (cluster: string) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  // Tracked so unmounting mid-handoff cannot open a drawer on a dead tree.
-  const handoff = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Mirrored only so the button can announce its state; the dialog owns the rest.
   const [open, setOpen] = useState(false);
 
   const close = useCallback(() => ref.current?.close(), []);
-
-  useEffect(() => () => {
-    if (handoff.current) clearTimeout(handoff.current);
-  }, []);
 
   // A drawer that fills the height still has a backdrop to its right, and a
   // click there should dismiss it the way a scrim does.
@@ -176,10 +170,15 @@ export function SiteMenu({
                 className="rail-link w-full"
                 onClick={() => {
                   close();
-                  // Let the menu finish sliding out before the filters slide
-                  // in, or two drawers cross on the same edge.
-                  if (handoff.current) clearTimeout(handoff.current);
-                  handoff.current = setTimeout(onFilters, 220);
+                  /*
+                    Both drawers travel the same axis from the same edge, so
+                    they are read as one drawer changing contents rather than
+                    two panels crossing - the overlap is what says so. This
+                    used to wait 220ms for the menu to clear, which put a
+                    fifth of a second of nothing between the press and any
+                    response. The menu is ~99% out by 90ms of its 240ms.
+                  */
+                  onFilters();
                 }}
               >
                 <span className="ic">
