@@ -14,6 +14,7 @@ import {
   type Filters,
 } from "@/lib/filters";
 import { BASEMAPS, type BasemapId } from "@/lib/map-style";
+import { prefersReducedMotion, scrollBehavior } from "@/lib/motion-preference";
 import { PAGE_SIZE, applyFilters, describeMiss } from "@/lib/query";
 import { CLUSTERS, clusterSlug, type Listing } from "@/lib/types";
 
@@ -27,9 +28,6 @@ const ListingMap = dynamic(() => import("./listing-map"), {
   loading: () => <div className="size-full bg-ground" />,
 });
 
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** Map or list. The map is the default; the list is the same rows, read down. */
 type View = "map" | "list";
@@ -149,7 +147,7 @@ export function SearchShell({ all }: { all: Listing[] }) {
     // The card is in a list that has just been mounted, so wait a frame.
     requestAnimationFrame(() => {
       const node = document.getElementById(`card-${slug}`);
-      node?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+      node?.scrollIntoView({ block: "center", behavior: scrollBehavior() });
     });
   }, []);
 

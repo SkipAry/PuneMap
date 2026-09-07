@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 
+import { scrollBehavior } from "@/lib/motion-preference";
 import { submitListing, type SubmitState } from "@/lib/submit-listing";
 import { AVAILABILITY, CLUSTERS, FLOORING_TYPES, PROPERTY_TYPES } from "@/lib/types";
 
@@ -58,7 +59,7 @@ export function AddSpaceForm({ onDone }: { onDone?: () => void }) {
     const culprit = state.field ? form.elements.namedItem(state.field) : null;
     if (culprit instanceof HTMLElement) {
       culprit.focus();
-      culprit.scrollIntoView({ block: "center", behavior: "smooth" });
+      culprit.scrollIntoView({ block: "center", behavior: scrollBehavior() });
     }
   }, [state]);
 
